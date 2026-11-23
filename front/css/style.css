@@ -1,0 +1,41 @@
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #7a2e2e;
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hover-lift {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+}
+
+.brand-panel {
+  background: linear-gradient(160deg, #7a2e2e, #3f1717);
+  color: #fff;
+}
+
+.photo-preview {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid #7a2e2e;
+}
+
+.page-head {
+  border-bottom: 3px solid #7a2e2e;
+  display: inline-block;
+  padding-bottom: 0.25rem;
+}
