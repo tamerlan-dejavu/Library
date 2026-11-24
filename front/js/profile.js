@@ -20,6 +20,14 @@ function makeCell(text) {
   return td;
 }
 
+// Creates a link to the book page
+function makeBookLink(bookId, title) {
+  const a = document.createElement("a");
+  a.href = "book.html?id=" + bookId;
+  a.textContent = title;
+  return a;
+}
+
 // Fills the "My loans" table
 function renderLoans(loans) {
   const body = document.getElementById("loanRows");
@@ -28,7 +36,9 @@ function renderLoans(loans) {
 
   for (let i = 0; i < loans.length; i++) {
     const row = document.createElement("tr");
-    row.appendChild(makeCell(loans[i].title));
+    const titleCell = document.createElement("td");
+    titleCell.appendChild(makeBookLink(loans[i].book_id, loans[i].title));
+    row.appendChild(titleCell);
     row.appendChild(makeCell(loans[i].loan_date));
     row.appendChild(makeCell(loans[i].due_date));
     row.appendChild(makeCell(loanStatus(loans[i])));
@@ -36,8 +46,7 @@ function renderLoans(loans) {
   }
 }
 
-// Fills the "My reviews" list. The API sends only the book title,
-// so the link searches the catalog for that title.
+// Fills the "My reviews" list, each title links to its book page
 function renderReviews(reviews) {
   const list = document.getElementById("reviewList");
   list.textContent = "";
@@ -48,9 +57,7 @@ function renderReviews(reviews) {
     const item = document.createElement("li");
     item.className = "review";
 
-    const link = document.createElement("a");
-    link.href = "catalog.html?q=" + encodeURIComponent(r.book_title);
-    link.textContent = r.book_title;
+    const link = makeBookLink(r.book_id, r.book_title);
 
     const rating = document.createElement("span");
     rating.className = "text-muted-ink ms-2";
