@@ -96,12 +96,15 @@ class ApiTests(TestCase):
     # --- GET /api/me/ ---
     def test_me_logged_in(self):
         Loan.objects.create(book_id=2, member=self.member, due_date="2099-01-01")
+        Review.objects.create(book_id=3, member=self.member, rating=4)
         self.log_in()
         r = self.client.get("/api/me/")
         self.assertEqual(r.status_code, 200)
         data = r.json()
         self.assertEqual(data["username"], "reader")
         self.assertEqual(data["loans"][0]["title"], "Animal Farm")
+        self.assertEqual(data["loans"][0]["book_id"], 2)
+        self.assertEqual(data["reviews"][0]["book_id"], 3)
         self.assertIn("csrftoken", r.cookies)
 
     def test_me_wrong_method(self):
@@ -144,6 +147,23 @@ class ApiTests(TestCase):
         self.assertTrue(
             Reservation.objects.filter(book_id=2, member=self.member, status="pending").exists()
         )
+
+    def test_borrow_twice(self):
+        self.log_in()
+        self.client.post("/api/books/2/borrow/")
+        r = self.client.post("/api/books/2/borrow/")
+        self.assertEqual(r.status_code, 400)
+        self.assertEqual(r.json()["error"], "You already have this book.")
+        self.assertEqual(Book.objects.get(book_id=2).available_copies, 3)
+
+    def test_reserve_twice(self):
+        Book.objects.filter(book_id=2).update(available_copies=0)
+        self.log_in()
+        self.client.post("/api/books/2/borrow/")
+        r = self.client.post("/api/books/2/borrow/")
+        self.assertEqual(r.status_code, 400)
+        self.assertEqual(r.json()["error"], "You already reserved this book.")
+        self.assertEqual(Reservation.objects.filter(book_id=2, member=self.member).count(), 1)
 
     def test_borrow_not_logged_in(self):
         r = self.client.post("/api/books/2/borrow/")
