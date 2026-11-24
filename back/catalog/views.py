@@ -255,6 +255,7 @@ def me(request):
         "username": request.user.username,
         "loans": [
             {
+                "book_id": loan.book_id,
                 "title": loan.book.title,
                 "loan_date": loan.loan_date,
                 "due_date": loan.due_date,
@@ -263,7 +264,7 @@ def me(request):
             for loan in loans
         ],
         "reviews": [
-            {"book_title": r.book.title, "rating": r.rating, "comment": r.comment}
+            {"book_id": r.book_id, "book_title": r.book.title, "rating": r.rating, "comment": r.comment}
             for r in reviews
         ],
     })
