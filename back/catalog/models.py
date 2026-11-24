@@ -2,6 +2,7 @@
 # managed = False: the tables are created by db/schema.sql, not by migrations.
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.functions import Now
 
 
 class Category(models.Model):
@@ -87,7 +88,8 @@ class Member(models.Model):
     full_name = models.TextField()
     email = models.TextField(unique=True, blank=True, null=True)
     birth_year = models.IntegerField(blank=True, null=True)
-    registered_at = models.DateTimeField(blank=True, null=True)
+    # db_default: let PostgreSQL fill the value (DEFAULT now() in schema.sql)
+    registered_at = models.DateTimeField(blank=True, null=True, db_default=Now())
 
     class Meta:
         managed = False
@@ -115,7 +117,7 @@ class Loan(models.Model):
     book = models.ForeignKey(Book, models.DO_NOTHING, blank=True, null=True)
     member = models.ForeignKey(Member, models.DO_NOTHING, blank=True, null=True)
     librarian = models.ForeignKey(Librarian, models.DO_NOTHING, blank=True, null=True)
-    loan_date = models.DateField()
+    loan_date = models.DateField(db_default=Now())
     due_date = models.DateField()
     return_date = models.DateField(blank=True, null=True)
 
@@ -131,8 +133,8 @@ class Reservation(models.Model):
     reservation_id = models.AutoField(primary_key=True)
     book = models.ForeignKey(Book, models.DO_NOTHING, blank=True, null=True)
     member = models.ForeignKey(Member, models.DO_NOTHING, blank=True, null=True)
-    reserved_at = models.DateTimeField(blank=True, null=True)
-    status = models.TextField()
+    reserved_at = models.DateTimeField(blank=True, null=True, db_default=Now())
+    status = models.TextField(db_default="pending")
 
     class Meta:
         managed = False
@@ -148,7 +150,7 @@ class Review(models.Model):
     member = models.ForeignKey(Member, models.DO_NOTHING, blank=True, null=True)
     rating = models.IntegerField()
     comment = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(blank=True, null=True, db_default=Now())
 
     class Meta:
         managed = False
