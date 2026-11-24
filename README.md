@@ -1,12 +1,46 @@
 # Book Catalog
 
-A student project: an online library where readers browse books, borrow or
-reserve them and write reviews. The backend is Django with a small JSON API
-and an admin panel. The data lives in PostgreSQL (Supabase). The frontend is
+A university project: an online library where readers browse books, borrow
+or reserve them and write reviews. The backend is Django with a small JSON
+API and an admin panel. The data lives in PostgreSQL on Supabase (11
+tables, stored functions, a separate application role). The frontend is
 static HTML + Bootstrap + vanilla JS. The book page also shows data from the
 public Open Library API.
 
-Links: [design in Figma](https://www.figma.com/design/pCMCj7ck0AuD1ufCNWxMaF/First_lab?node-id=0-1&t=HzCb5ytFDVQlfYwq-1)
+Design: [Figma](https://www.figma.com/design/pCMCj7ck0AuD1ufCNWxMaF/First_lab?node-id=0-1&t=HzCb5ytFDVQlfYwq-1)
+
+## Technologies
+
+| Part      | Technology and version                                                |
+|-----------|-----------------------------------------------------------------------|
+| Language  | Python 3.12 on Vercel (`.python-version`); 3.12-3.14 work locally     |
+| Backend   | Django 5.2.19, psycopg 3.3.9, dj-database-url 3.1.2, python-dotenv 1.2.4 |
+| Static    | WhiteNoise 6.12.0 (gunicorn 27.0.1 for a classic server)              |
+| Database  | PostgreSQL 17 on Supabase, transaction pooler (port 6543), UTF8       |
+| Frontend  | HTML, CSS, vanilla JavaScript, Bootstrap 5.3.3 (CDN), Google Fonts    |
+| External  | Open Library API (no key)                                             |
+| Hosting   | Vercel (Python runtime)                                               |
+
+## Two database users
+
+| Variable             | User                          | Used for                                              |
+|----------------------|-------------------------------|-------------------------------------------------------|
+| `ADMIN_DATABASE_URL` | `postgres.<project_ref>`      | `python manage.py migrate` and all `db/*.sql` scripts |
+| `DATABASE_URL`       | `library_app.<project_ref>`   | runserver, tests, `import_books`, Vercel              |
+
+`library_app` (created by `db/security.sql`) can only read and change rows:
+no CREATE, DROP, TRUNCATE or ALTER. `settings.py` always reads
+`DATABASE_URL`; `db/run_sql.py` uses `ADMIN_DATABASE_URL` when it is set.
+
+Connection string for the application (Supabase transaction pooler). Take
+`<project_ref>` and the host from your `postgres.<project_ref>` admin URL:
+
+```
+DATABASE_URL=postgresql://library_app.<project_ref>:<APP_DB_PASSWORD>@aws-1-<region>.pooler.supabase.com:6543/postgres
+```
+
+Special characters in a password must be %-encoded in the URL
+(for example `[` becomes `%5B`).
 
 ## Run locally
 
@@ -14,26 +48,43 @@ Links: [design in Figma](https://www.figma.com/design/pCMCj7ck0AuD1ufCNWxMaF/Fir
 python -m venv venv
 venv\Scripts\activate            # Windows (macOS/Linux: source venv/bin/activate)
 pip install -r requirements.txt
-copy .env.example .env           # then fill in the values (cp on macOS/Linux)
-
+copy .env.example .env           # fill in the values (cp on macOS/Linux)
 cd back
-python manage.py migrate                 # Django tables (auth, sessions, admin)
-python db/run_sql.py db/schema.sql       # catalog tables (drops them first!)
-python db/run_sql.py db/seed.sql         # demo data (made by db/generate_seed.py, no network)
-python db/run_sql.py db/procedures.sql   # stored functions
-python db/run_sql.py db/security.sql     # roles and permissions (when present)
-python manage.py import_books            # optional: ~70 extra books from Open Library
-python manage.py createsuperuser         # login for /admin/
-python manage.py runserver               # http://127.0.0.1:8000
 ```
 
+Set up the database once, as the admin user, in this order:
+
+```powershell
+# PowerShell: run migrate with the admin connection
+$env:DATABASE_URL = (Select-String '^ADMIN_DATABASE_URL=' ..\.env).Line.Split('=', 2)[1]
+python manage.py migrate
+Remove-Item Env:DATABASE_URL      # back to the library_app URL from .env
+```
+
+```bash
+# bash: the same for one command only
+DATABASE_URL="$(grep '^ADMIN_DATABASE_URL=' ../.env | cut -d= -f2-)" python manage.py migrate
+```
+
+```bash
+python db/run_sql.py db/schema.sql       # 1. tables (drops them first!)
+python db/run_sql.py db/seed.sql         # 2. demo data
+python db/run_sql.py db/procedures.sql   # 3. stored functions
+python db/run_sql.py db/security.sql     # 4. role library_app (needs APP_DB_PASSWORD)
+python db/check_app_user.py              # check the rights of library_app
+python manage.py import_books            # optional: extra books from Open Library
+python manage.py createsuperuser         # login for /admin/
+python manage.py runserver               # http://127.0.0.1:8000
+python manage.py test                    # tests (as library_app)
+```
+
+After `schema.sql` run `security.sql` again: dropped and re-created tables
+need their row level security policy again.
+
 Set `DEBUG=True` in `.env` on your computer. With `DEBUG=False`, run
-`python manage.py collectstatic --noinput` first. Note that login will not work
-over plain http then, because cookies are marked secure.
+`python manage.py collectstatic --noinput` first; login then needs https.
 
-Tests: `python manage.py test` (in `back/`).
-
-SQL reports for the DBMS project (saved in `docs/sql_results/`):
+SQL reports (saved in `docs/sql_results/`):
 
 ```bash
 python db/run_sql.py db/structure.sql --out ../docs/sql_results/structure.txt
@@ -41,18 +92,32 @@ python db/run_sql.py db/queries.sql --out ../docs/sql_results/queries.txt
 python db/run_sql.py db/call_functions.sql --out ../docs/sql_results/functions.txt
 ```
 
+## Files in back/db/
+
+| File                 | What it does                                                          |
+|----------------------|-----------------------------------------------------------------------|
+| `schema.sql`         | Creates the 11 tables, constraints and indexes; ER mapping in the header |
+| `generate_seed.py`   | Writes `seed.sql` (fixed random seed, no network)                     |
+| `seed.sql`           | Demo data: 143 real books, 134 authors, 125 members, 180 loans, ...   |
+| `procedures.sql`     | Three PL/pgSQL functions (above-average books, overdue members, unborrowed books) |
+| `security.sql`       | Role `library_app`, grants, row level security policies              |
+| `structure.sql`      | Report: columns, constraints and row counts of the 11 tables          |
+| `queries.sql`        | Demonstration queries: joins, aggregates, subqueries                  |
+| `call_functions.sql` | Calls each stored function once                                       |
+| `run_sql.py`         | Runs a .sql file; `--out` saves the results as text tables            |
+| `check_app_user.py`  | Proves what `library_app` may and may not do (rolled back)            |
+
 ## Deploy to Vercel
 
 1. Push the repository to GitHub. In Vercel choose **Add New → Project** and
-   import it. Keep the **Root Directory** as the repository root, because the
-   function needs both `back/` and `front/`. Vercel finds `back/manage.py` by
-   itself.
-2. Add the environment variables: `DJANGO_SECRET_KEY`, `DATABASE_URL` and
-   `DEBUG=False`. Optional: `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` for a
-   custom domain.
+   import it. Keep the **Root Directory** as the repository root (the
+   function needs both `back/` and `front/`); Vercel finds `back/manage.py`.
+2. Environment variables: `DJANGO_SECRET_KEY`, `DATABASE_URL` (the
+   **library_app** URL) and `DEBUG=False`. Optional: `ALLOWED_HOSTS` and
+   `CSRF_TRUSTED_ORIGINS` for a custom domain. Do not give Vercel the admin URL.
 3. Click **Deploy**. Vercel installs `requirements.txt`, runs `collectstatic`
-   and serves the admin static files from its CDN. Run migrations and the SQL
-   scripts once from your computer against the same database.
+   and serves the admin static files from its CDN. Database setup is done
+   from your computer (see above).
 
 ## Project structure
 
@@ -60,10 +125,11 @@ python db/run_sql.py db/call_functions.sql --out ../docs/sql_results/functions.t
 requirements.txt, .python-version   dependencies and Python version (Vercel reads them here)
 back/manage.py                      Django entry point
 back/config/                        settings, urls (API, admin, frontend fallback), wsgi
-back/catalog/models.py, admin.py    10 tables (managed=False) and the admin panel
+back/catalog/models.py, admin.py    11 tables (managed=False) and the admin panel
 back/catalog/views.py, urls.py      JSON API under /api/
 back/catalog/management/commands/   import_books (Open Library)
-back/catalog/tests.py               API tests and import parsing tests
-back/db/                            schema.sql, seed.sql, queries.sql, run_sql.py
+back/catalog/tests.py               API, admin, model rule and stored function tests
+back/db/                            SQL scripts and helpers (see the table above)
+docs/sql_results/                   saved results of the SQL reports
 front/                              static pages, css/style.css, js/, assets/
 ```
