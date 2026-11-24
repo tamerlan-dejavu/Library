@@ -87,3 +87,6 @@ WHITENOISE_ROOT = REPO_DIR / "front"
 WHITENOISE_INDEX_FILE = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Tests use the existing database and roll everything back (see the file)
+TEST_RUNNER = "config.test_runner.ExistingDatabaseRunner"
