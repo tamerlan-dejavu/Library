@@ -55,19 +55,52 @@ def split_statements(sql):
     return statements
 
 
+def fill_password(sql):
+    # security.sql contains the placeholder :app_password. We replace it
+    # with the value of APP_DB_PASSWORD as a quoted SQL string ('...').
+    if ":app_password" not in sql:
+        return sql
+    password = os.environ.get("APP_DB_PASSWORD")
+    if not password:
+        sys.exit("APP_DB_PASSWORD is not set (see .env.example).")
+    return sql.replace(":app_password", "'" + password.replace("'", "''") + "'")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Run a .sql file")
     parser.add_argument("file", help="the .sql file to run")
     parser.add_argument("--out", help="also save SELECT results to this text file")
     args = parser.parse_args()
 
-    sql = Path(args.file).read_text(encoding="utf-8")
+    sql = fill_password(Path(args.file).read_text(encoding="utf-8"))
     url = os.environ.get("ADMIN_DATABASE_URL") or os.environ["DATABASE_URL"]
-    report = []
 
+    try:
+        report = run(url, sql, args.out)
+    except psycopg.Error as err:
+        # PostgreSQL error messages can quote the failing SQL line,
+        # so hide the password before printing
+        message = str(err)
+        if os.environ.get("APP_DB_PASSWORD"):
+            message = message.replace(os.environ["APP_DB_PASSWORD"], "***")
+        sys.exit(f"ERROR in {args.file}: {message}")
+
+    text = "\n".join(report)
+    print(text)
+    if args.out:
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(f"Results of {Path(args.file).name}\n\n" + text, encoding="utf-8")
+        print("Saved:", out)
+    print("OK:", args.file)
+
+
+def run(url, sql, out):
+    # Runs the SQL and returns the result tables as text
+    report = []
     # The "with" block commits on success and rolls back on error
     with psycopg.connect(url) as conn:
-        if args.out:
+        if out:
             # One statement at a time, so every result gets its comment as a title
             for title, code in split_statements(sql):
                 cur = conn.execute(code)
@@ -82,15 +115,7 @@ def main():
                     report.append(format_table([c.name for c in cur.description], cur.fetchall()) + "\n")
                 if not cur.nextset():
                     break
-
-    text = "\n".join(report)
-    print(text)
-    if args.out:
-        out = Path(args.out)
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(f"Results of {Path(args.file).name}\n\n" + text, encoding="utf-8")
-        print("Saved:", out)
-    print("OK:", args.file)
+    return report
 
 
 if __name__ == "__main__":
