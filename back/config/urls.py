@@ -1,7 +1,8 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 
-# Only the admin for now; the frontend is served by WhiteNoise
+# The frontend itself is served by WhiteNoise (see settings.py)
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/", include("catalog.urls")),
 ]
