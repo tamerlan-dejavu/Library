@@ -4,10 +4,12 @@ from pathlib import Path
 import dj_database_url
 from dotenv import load_dotenv
 
+# BASE_DIR = back/ (Django code), REPO_DIR = repository root (.env, front/)
 BASE_DIR = Path(__file__).resolve().parent.parent
+REPO_DIR = BASE_DIR.parent
 
-# Read variables from the .env file in the project root (if it exists)
-load_dotenv(BASE_DIR / ".env")
+# Read variables from the .env file in the repository root (if it exists)
+load_dotenv(REPO_DIR / ".env")
 
 SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 DEBUG = os.getenv("DEBUG", "False") == "True"
@@ -81,7 +83,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # WhiteNoise also serves the frontend folder at the site root:
 # "/" -> front/index.html, "/catalog.html" -> front/catalog.html
-WHITENOISE_ROOT = BASE_DIR / "front"
+WHITENOISE_ROOT = REPO_DIR / "front"
 WHITENOISE_INDEX_FILE = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
