@@ -315,6 +315,12 @@ def borrow(request, book_id):
         if book is None:
             return error("Book not found", 404)
 
+        # One active loan and one pending reservation per member per book
+        if Loan.objects.filter(book=book, member=member, return_date__isnull=True).exists():
+            return error("You already have this book.")
+        if Reservation.objects.filter(book=book, member=member, status="pending").exists():
+            return error("You already reserved this book.")
+
         if book.available_copies > 0:
             today = timezone.localdate()
             Loan.objects.create(
