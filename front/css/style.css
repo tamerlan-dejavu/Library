@@ -395,6 +395,9 @@ a:hover { color: var(--ink); }
   aspect-ratio: 2 / 3;
   object-fit: cover;
   border-bottom: 1px solid var(--linen);
+  /* The placeholder shows behind the image while a slow cover is still
+     loading; the real cover covers it as soon as it arrives */
+  background: url("../assets/book-placeholder.svg") center / cover no-repeat;
 }
 
 .book-card-body {
