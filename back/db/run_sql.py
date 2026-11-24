@@ -1,4 +1,4 @@
-# Usage: python db/run_sql.py db/schema.sql
+# Usage (from back/): python db/run_sql.py db/schema.sql
 import os
 import sys
 
