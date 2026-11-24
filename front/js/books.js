@@ -12,9 +12,13 @@ function ratingText(rating) {
 
 // Open Library covers come in sizes S, M and L ("...-L.jpg").
 // Cards use the medium one, the book page keeps the large one.
+// Our own copies ("covers/12.jpg") are used as they are.
 function coverUrl(book, size) {
   if (!book.cover_url) {
     return null;
+  }
+  if (!book.cover_url.startsWith("http")) {
+    return book.cover_url;
   }
   return book.cover_url.replace("-L.jpg", "-" + size + ".jpg");
 }
