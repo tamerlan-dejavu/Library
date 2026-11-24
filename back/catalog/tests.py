@@ -3,10 +3,12 @@
 # They run on the real database with the data from db/seed.sql, but every
 # change is rolled back (see config/test_runner.py).
 import json
+from pathlib import Path
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 
+from .management.commands import import_books
 from .models import Book, Loan, Member, Reservation, Review
 
 
@@ -168,3 +170,56 @@ class ApiTests(TestCase):
     def test_borrow_not_logged_in(self):
         r = self.client.post("/api/books/2/borrow/")
         self.assertEqual(r.status_code, 401)
+
+
+# ---------- Open Library import: parsing only, no network, no database ----------
+
+# Real (shortened) answers from Open Library, saved in test_data/
+SAMPLE = json.loads(
+    (Path(__file__).parent / "test_data" / "openlibrary_sample.json").read_text(encoding="utf-8")
+)
+
+
+class OpenLibraryParsingTests(SimpleTestCase):
+    def test_work_id(self):
+        key = SAMPLE["search"]["docs"][0]["key"]
+        self.assertEqual(key, "/works/OL138052W")
+        self.assertEqual(import_books.work_id(key), "OL138052W")
+
+    def test_description_object_string_and_missing(self):
+        text = import_books.get_description(SAMPLE["work_with_object_description"])
+        self.assertTrue(text.startswith("Alice's Adventures in Wonderland"))
+        text = import_books.get_description(SAMPLE["work_with_string_description"])
+        self.assertTrue(text.startswith("A reprinting of the 1843"))
+        self.assertEqual(import_books.get_description(SAMPLE["work_without_description"]),
+                         "No description available.")
+        self.assertEqual(import_books.get_description(None), "No description available.")
+
+    def test_shorten_at_sentence_end(self):
+        text = "This is one sentence. " * 50  # 1100 characters
+        short = import_books.shorten(text)
+        self.assertLessEqual(len(short), 600)
+        self.assertTrue(short.endswith("."))
+
+    def test_pick_books_skips_incomplete_known_and_repeated(self):
+        docs = SAMPLE["search"]["docs"]
+        no_cover = dict(docs[0], key="/works/OL9W", title="No cover")
+        del no_cover["cover_i"]
+        all_docs = [no_cover, docs[0], docs[1], dict(docs[0])]  # last one repeats a key
+
+        seen = set()
+        titles = {"a christmas carol"}  # already in our table
+        picked, skipped = import_books.pick_books(all_docs, seen, titles)
+
+        self.assertEqual([d["title"] for d in picked], ["Alice's Adventures in Wonderland"])
+        self.assertEqual(skipped, 3)
+        # Running again finds nothing new (safe to run twice)
+        picked, skipped = import_books.pick_books(all_docs, seen, titles)
+        self.assertEqual(picked, [])
+
+    def test_bestsellers_and_cover_url(self):
+        docs = [{"key": "a", "edition_count": 5}, {"key": "b", "edition_count": 50},
+                {"key": "c", "edition_count": 20}]
+        self.assertEqual(import_books.bestseller_keys(docs), {"b", "c"})
+        self.assertEqual(import_books.cover_url(10527843),
+                         "https://covers.openlibrary.org/b/id/10527843-L.jpg")
