@@ -55,9 +55,11 @@ class Book(models.Model):
     title = models.TextField()
     publication_year = models.IntegerField(blank=True, null=True)
     isbn = models.TextField(unique=True, blank=True, null=True)
-    # DO_NOTHING: the database itself decides what happens on delete
-    category = models.ForeignKey(Category, models.DO_NOTHING, blank=True, null=True)
-    publisher = models.ForeignKey(Publisher, models.DO_NOTHING, blank=True, null=True)
+    # on_delete copies the database rules: PROTECT = the FK has no ON DELETE
+    # (NO ACTION), so Django refuses the delete with a clear admin message
+    # instead of a database error; CASCADE = ON DELETE CASCADE in schema.sql
+    category = models.ForeignKey(Category, models.PROTECT, blank=True, null=True)
+    publisher = models.ForeignKey(Publisher, models.PROTECT, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     cover_url = models.TextField(blank=True, null=True)
     is_bestseller = models.BooleanField(default=False)
@@ -80,8 +82,8 @@ class Book(models.Model):
 
 class BookAuthor(models.Model):
     book_author_id = models.AutoField(primary_key=True)
-    book = models.ForeignKey(Book, models.DO_NOTHING)
-    author = models.ForeignKey(Author, models.DO_NOTHING)
+    book = models.ForeignKey(Book, models.CASCADE)
+    author = models.ForeignKey(Author, models.PROTECT)
 
     class Meta:
         managed = False
@@ -148,9 +150,9 @@ class Librarian(models.Model):
 
 class Loan(models.Model):
     loan_id = models.AutoField(primary_key=True)
-    book = models.ForeignKey(Book, models.DO_NOTHING, blank=True, null=True)
-    member = models.ForeignKey(Member, models.DO_NOTHING, blank=True, null=True)
-    librarian = models.ForeignKey(Librarian, models.DO_NOTHING, blank=True, null=True)
+    book = models.ForeignKey(Book, models.PROTECT, blank=True, null=True)
+    member = models.ForeignKey(Member, models.PROTECT, blank=True, null=True)
+    librarian = models.ForeignKey(Librarian, models.PROTECT, blank=True, null=True)
     loan_date = models.DateField(db_default=Now())
     due_date = models.DateField()
     return_date = models.DateField(blank=True, null=True)
@@ -172,8 +174,8 @@ class Loan(models.Model):
 
 class Reservation(models.Model):
     reservation_id = models.AutoField(primary_key=True)
-    book = models.ForeignKey(Book, models.DO_NOTHING, blank=True, null=True)
-    member = models.ForeignKey(Member, models.DO_NOTHING, blank=True, null=True)
+    book = models.ForeignKey(Book, models.PROTECT, blank=True, null=True)
+    member = models.ForeignKey(Member, models.PROTECT, blank=True, null=True)
     reserved_at = models.DateTimeField(blank=True, null=True, db_default=Now())
     status = models.TextField(db_default="pending")
 
@@ -187,8 +189,8 @@ class Reservation(models.Model):
 
 class Review(models.Model):
     review_id = models.AutoField(primary_key=True)
-    book = models.ForeignKey(Book, models.DO_NOTHING, blank=True, null=True)
-    member = models.ForeignKey(Member, models.DO_NOTHING, blank=True, null=True)
+    book = models.ForeignKey(Book, models.CASCADE, blank=True, null=True)
+    member = models.ForeignKey(Member, models.PROTECT, blank=True, null=True)
     # Same rule as CHECK (rating BETWEEN 1 AND 5)
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     comment = models.TextField(blank=True, null=True)
