@@ -78,6 +78,24 @@ python manage.py runserver               # http://127.0.0.1:8000
 python manage.py test                    # tests (as library_app)
 ```
 
+### Book covers: copy them into the project
+
+`import_books` stores Open Library cover links. That server is often slow,
+so the covers can be copied into `front/covers/` and served by our own site:
+
+1. `python manage.py download_covers` downloads the medium cover of each
+   book to `front/covers/<book_id>.jpg` (slow and polite: 1 request per
+   second, 3 tries, skips files that already exist). Run it again for the
+   books listed as failed.
+2. Commit `front/covers/` and deploy, so the images are online.
+3. `python manage.py download_covers --update-db` sets `cover_url` to
+   `covers/<book_id>.jpg` for every book that has a file.
+
+The order matters: the live site reads `cover_url` from the same database,
+so the database may point to `covers/...` only after those files are
+deployed; otherwise visitors would get missing images in between. Books
+without a downloaded file keep their Open Library link.
+
 After `schema.sql` run `security.sql` again: dropped and re-created tables
 need their row level security policy again.
 
@@ -127,9 +145,9 @@ back/manage.py                      Django entry point
 back/config/                        settings, urls (API, admin, frontend fallback), wsgi
 back/catalog/models.py, admin.py    11 tables (managed=False) and the admin panel
 back/catalog/views.py, urls.py      JSON API under /api/
-back/catalog/management/commands/   import_books (Open Library)
+back/catalog/management/commands/   import_books (Open Library), download_covers
 back/catalog/tests.py               API, admin, model rule and stored function tests
 back/db/                            SQL scripts and helpers (see the table above)
 docs/sql_results/                   saved results of the SQL reports
-front/                              static pages, css/style.css, js/, assets/
+front/                              static pages, css/style.css, js/, assets/, covers/
 ```
