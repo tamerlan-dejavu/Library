@@ -10,16 +10,52 @@ function ratingText(rating) {
   return rating + " / 5";
 }
 
-// Creates the cover <img>; uses the placeholder when there is no cover
-function createCover(book) {
+// Open Library covers come in sizes S, M and L ("...-L.jpg").
+// Cards use the medium one, the book page keeps the large one.
+function coverUrl(book, size) {
+  if (!book.cover_url) {
+    return null;
+  }
+  return book.cover_url.replace("-L.jpg", "-" + size + ".jpg");
+}
+
+// Called when a cover fails: show the placeholder at once (so the alt text
+// never appears), then try the real cover once more after 2 seconds
+function handleCoverError(img, url) {
+  img.onerror = null;           // the placeholder can never call us again
+  img.src = PLACEHOLDER_COVER;
+
+  setTimeout(function () {
+    // Load the cover again in a hidden Image; swap it in only if it works
+    const retry = new Image();
+    retry.referrerPolicy = "no-referrer";
+    retry.onload = function () {
+      img.src = url;
+    };
+    retry.src = url;
+  }, 2000);
+}
+
+// Creates the cover <img>. size: "M" for cards, "L" for the book page.
+function createCover(book, size) {
   const img = document.createElement("img");
   img.className = "book-cover";
-  img.src = book.cover_url || PLACEHOLDER_COVER;
   img.alt = "Cover of " + book.title;
-  // If the cover link is broken, show the placeholder instead
-  img.addEventListener("error", function () {
+  img.loading = "lazy";              // load only when it scrolls into view
+  img.decoding = "async";            // decode without blocking the page
+  img.referrerPolicy = "no-referrer";
+
+  const url = coverUrl(book, size || "L");
+  if (url === null) {
     img.src = PLACEHOLDER_COVER;
-  });
+    return img;
+  }
+
+  // The handler is set BEFORE src, so even a very fast failure is caught
+  img.onerror = function () {
+    handleCoverError(img, url);
+  };
+  img.src = url;
   return img;
 }
 
@@ -63,7 +99,7 @@ function createBookCard(book, afterBorrow) {
 
   const coverLink = document.createElement("a");
   coverLink.href = link;
-  coverLink.appendChild(createCover(book));
+  coverLink.appendChild(createCover(book, "M"));
   card.appendChild(coverLink);
 
   const body = document.createElement("div");

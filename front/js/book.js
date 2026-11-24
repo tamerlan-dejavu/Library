@@ -78,7 +78,7 @@ async function loadBook() {
 
   const coverBox = document.getElementById("coverBox");
   coverBox.textContent = "";
-  coverBox.appendChild(createCover(book));
+  coverBox.appendChild(createCover(book, "L"));
 
   document.getElementById("bookTitle").textContent = book.title;
   document.getElementById("bookAuthors").textContent = "by " + book.authors.join(", ");
