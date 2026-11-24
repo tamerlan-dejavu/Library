@@ -1,0 +1,127 @@
+Results of structure.sql
+
+-- Database structure report (read-only). Shows only the 11 project
+-- tables, not Django's own tables (auth_*, django_*).
+-- Run: python db/run_sql.py db/structure.sql --out ../docs/sql_results/structure.txt
+-- (a) Columns: data type, NULL allowed or not, default value.
+--     information_schema.columns describes every column of every table.
+table_name   | column_name      | data_type                   | is_nullable | column_default
+-------------+------------------+-----------------------------+-------------+----------------
+author       | author_id        | integer                     | NO          | NULL
+author       | full_name        | text                        | NO          | NULL
+author       | birth_year       | integer                     | YES         | NULL
+author       | country          | text                        | YES         | NULL
+book         | book_id          | integer                     | NO          | NULL
+book         | title            | text                        | NO          | NULL
+book         | publication_year | integer                     | YES         | NULL
+book         | isbn             | text                        | YES         | NULL
+book         | category_id      | integer                     | YES         | NULL
+book         | publisher_id     | integer                     | YES         | NULL
+book         | description      | text                        | YES         | NULL
+book         | cover_url        | text                        | YES         | NULL
+book         | is_bestseller    | boolean                     | NO          | false
+book         | total_copies     | integer                     | NO          | NULL
+book         | available_copies | integer                     | NO          | NULL
+book_author  | book_author_id   | integer                     | NO          | NULL
+book_author  | book_id          | integer                     | NO          | NULL
+book_author  | author_id        | integer                     | NO          | NULL
+category     | category_id      | integer                     | NO          | NULL
+category     | name             | text                        | NO          | NULL
+librarian    | librarian_id     | integer                     | NO          | NULL
+librarian    | full_name        | text                        | NO          | NULL
+librarian    | email            | text                        | YES         | NULL
+loan         | loan_id          | integer                     | NO          | NULL
+loan         | book_id          | integer                     | YES         | NULL
+loan         | member_id        | integer                     | YES         | NULL
+loan         | librarian_id     | integer                     | YES         | NULL
+loan         | loan_date        | date                        | NO          | CURRENT_DATE
+loan         | due_date         | date                        | NO          | NULL
+loan         | return_date      | date                        | YES         | NULL
+member       | member_id        | integer                     | NO          | NULL
+member       | user_id          | bigint                      | YES         | NULL
+member       | full_name        | text                        | NO          | NULL
+member       | email            | text                        | YES         | NULL
+member       | birth_year       | integer                     | YES         | NULL
+member       | city             | text                        | YES         | NULL
+member       | street           | text                        | YES         | NULL
+member       | registered_at    | timestamp without time zone | YES         | now()
+member_phone | member_phone_id  | integer                     | NO          | NULL
+member_phone | member_id        | integer                     | NO          | NULL
+member_phone | phone            | text                        | NO          | NULL
+publisher    | publisher_id     | integer                     | NO          | NULL
+publisher    | name             | text                        | NO          | NULL
+publisher    | country          | text                        | YES         | NULL
+reservation  | reservation_id   | integer                     | NO          | NULL
+reservation  | book_id          | integer                     | YES         | NULL
+reservation  | member_id        | integer                     | YES         | NULL
+reservation  | reserved_at      | timestamp without time zone | YES         | now()
+reservation  | status           | text                        | NO          | 'pending'::text
+review       | review_id        | integer                     | NO          | NULL
+review       | book_id          | integer                     | YES         | NULL
+review       | member_id        | integer                     | YES         | NULL
+review       | rating           | integer                     | NO          | NULL
+review       | comment          | text                        | YES         | NULL
+review       | created_at       | timestamp without time zone | YES         | now()
+(55 rows)
+
+--     they are already visible in (a), so we hide them here.
+table_name   | constraint_type | constraint_name                   | columns            | references_table | check_clause
+-------------+-----------------+-----------------------------------+--------------------+------------------+-------------------------------------------------------------
+author       | PRIMARY KEY     | author_pkey                       | author_id          | NULL             | NULL
+book         | CHECK           | book_check                        | NULL               | NULL             | ((available_copies >= 0) AND (available_copies <= total_c...
+book         | CHECK           | book_total_copies_check           | NULL               | NULL             | (total_copies >= 0)
+book         | FOREIGN KEY     | book_category_id_fkey             | category_id        | category         | NULL
+book         | FOREIGN KEY     | book_publisher_id_fkey            | publisher_id       | publisher        | NULL
+book         | PRIMARY KEY     | book_pkey                         | book_id            | NULL             | NULL
+book         | UNIQUE          | book_isbn_key                     | isbn               | NULL             | NULL
+book_author  | FOREIGN KEY     | book_author_author_id_fkey        | author_id          | author           | NULL
+book_author  | FOREIGN KEY     | book_author_book_id_fkey          | book_id            | book             | NULL
+book_author  | PRIMARY KEY     | book_author_pkey                  | book_author_id     | NULL             | NULL
+book_author  | UNIQUE          | book_author_book_id_author_id_key | author_id, book_id | NULL             | NULL
+category     | PRIMARY KEY     | category_pkey                     | category_id        | NULL             | NULL
+category     | UNIQUE          | category_name_key                 | name               | NULL             | NULL
+librarian    | PRIMARY KEY     | librarian_pkey                    | librarian_id       | NULL             | NULL
+librarian    | UNIQUE          | librarian_email_key               | email              | NULL             | NULL
+loan         | CHECK           | loan_check                        | NULL               | NULL             | (due_date >= loan_date)
+loan         | FOREIGN KEY     | loan_book_id_fkey                 | book_id            | book             | NULL
+loan         | FOREIGN KEY     | loan_librarian_id_fkey            | librarian_id       | librarian        | NULL
+loan         | FOREIGN KEY     | loan_member_id_fkey               | member_id          | member           | NULL
+loan         | PRIMARY KEY     | loan_pkey                         | loan_id            | NULL             | NULL
+member       | CHECK           | member_birth_year_check           | NULL               | NULL             | ((birth_year >= 1900) AND (birth_year <= 2008))
+member       | FOREIGN KEY     | member_user_id_fkey               | user_id            | auth_user        | NULL
+member       | PRIMARY KEY     | member_pkey                       | member_id          | NULL             | NULL
+member       | UNIQUE          | member_email_key                  | email              | NULL             | NULL
+member       | UNIQUE          | member_user_id_key                | user_id            | NULL             | NULL
+member_phone | CHECK           | member_phone_phone_check          | NULL               | NULL             | (phone ~ '^\+?[0-9]{10,15}$'::text)
+member_phone | FOREIGN KEY     | member_phone_member_id_fkey       | member_id          | member           | NULL
+member_phone | PRIMARY KEY     | member_phone_pkey                 | member_phone_id    | NULL             | NULL
+member_phone | UNIQUE          | member_phone_member_id_phone_key  | member_id, phone   | NULL             | NULL
+publisher    | PRIMARY KEY     | publisher_pkey                    | publisher_id       | NULL             | NULL
+publisher    | UNIQUE          | publisher_name_key                | name               | NULL             | NULL
+reservation  | CHECK           | reservation_status_check          | NULL               | NULL             | (status = ANY (ARRAY['pending'::text, 'fulfilled'::text, ...
+reservation  | FOREIGN KEY     | reservation_book_id_fkey          | book_id            | book             | NULL
+reservation  | FOREIGN KEY     | reservation_member_id_fkey        | member_id          | member           | NULL
+reservation  | PRIMARY KEY     | reservation_pkey                  | reservation_id     | NULL             | NULL
+review       | CHECK           | review_rating_check               | NULL               | NULL             | ((rating >= 1) AND (rating <= 5))
+review       | FOREIGN KEY     | review_book_id_fkey               | book_id            | book             | NULL
+review       | FOREIGN KEY     | review_member_id_fkey             | member_id          | member           | NULL
+review       | PRIMARY KEY     | review_pkey                       | review_id          | NULL             | NULL
+review       | UNIQUE          | review_book_id_member_id_key      | book_id, member_id | NULL             | NULL
+(40 rows)
+
+-- (c) Number of rows in each project table, in one result.
+--     UNION ALL glues the 11 one-row results together.
+table_name   | row_count
+-------------+----------
+category     | 6
+publisher    | 31
+author       | 134
+book         | 143
+book_author  | 149
+member       | 125
+member_phone | 164
+librarian    | 5
+loan         | 180
+reservation  | 110
+review       | 170
+(11 rows)
