@@ -1,41 +1,548 @@
+/* ==========================================================
+   Book Catalog - "Editorial minimalism"
+   Warm paper, ink, one burgundy accent. Bootstrap 5.3.3 is
+   overridden through its own CSS variables.
+   ========================================================== */
 
-.avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background-color: #7a2e2e;
-  color: #fff;
-  font-size: 1.25rem;
-  font-weight: 700;
-  display: inline-flex;
+/* ---------- Design tokens (default theme "paper") ---------- */
+:root {
+  --paper: #F5F1E8;
+  --linen: #D9D0C1;
+  --stone: #B7A98F;
+  --ink: #24231F;
+  --accent: #873D35;
+  --font-heading: "Cormorant Garamond", serif;
+  --font-body: "Source Sans 3", sans-serif;
+  --base-size: 16px;
+
+  /* Extra tokens used by the themes */
+  --card: #FBF9F4;
+  --muted: color-mix(in srgb, var(--ink) 72%, var(--paper));
+  --heading-scale: 1;
+  --heading-style: normal;
+  --hero-image: url("../assets/book1.png");
+
+  /* Bootstrap variables mapped to our tokens */
+  --bs-body-bg: var(--paper);
+  --bs-body-color: var(--ink);
+  --bs-primary: var(--accent);
+  --bs-primary-rgb: 135, 61, 53;
+  --bs-link-color: var(--accent);
+  --bs-border-color: var(--linen);
+  --bs-body-font-family: var(--font-body);
+  --bs-emphasis-color: var(--ink);
+  --bs-heading-color: var(--ink);
+  --bs-secondary-color: var(--muted);
+  --bs-secondary-bg: var(--linen);
+  --bs-tertiary-bg: var(--card);
+  --bs-border-radius: 3px;
+  --bs-border-radius-sm: 2px;
+  --bs-border-radius-lg: 4px;
+  --bs-form-invalid-color: var(--accent);
+  --bs-form-invalid-border-color: var(--accent);
+}
+
+/* ---------- Theme presets (set by js/theme.js) ---------- */
+[data-theme="night"] {
+  --paper: #24231F;
+  --ink: #F5F1E8;
+  --linen: #34322C;
+  --stone: #5C574C;
+  --accent: #C4685D;
+  --card: #2B2A25;
+  --bs-primary-rgb: 196, 104, 93;
+  --heading-style: italic;
+  --hero-image: url("../assets/book2.png");
+  color-scheme: dark;
+}
+
+[data-theme="contrast"] {
+  --paper: #FFFFFF;
+  --ink: #000000;
+  --linen: #E6E6E6;
+  --stone: #8A8A8A;
+  --accent: #B3261E;
+  --card: #FFFFFF;
+  --base-size: 18px;
+  --bs-primary-rgb: 179, 38, 30;
+  --heading-scale: 1.25;
+  --hero-image: url("../assets/book2.png");
+}
+
+/* ---------- Base typography ---------- */
+body {
+  font-size: var(--base-size);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6, .brand {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-style: var(--heading-style);
+  color: var(--ink);
+  line-height: 1.15;
+}
+
+h1 { font-size: calc(2.75rem * var(--heading-scale)); }
+h2 { font-size: calc(2rem * var(--heading-scale)); }
+h3 { font-size: calc(1.35rem * var(--heading-scale)); }
+
+a { color: var(--accent); }
+a:hover { color: var(--ink); }
+
+.eyebrow {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+.text-muted-ink { color: var(--muted); }
+
+.section { padding: 3rem 0; }
+.section + .section { border-top: 1px solid var(--linen); }
+
+/* ---------- Bootstrap components in our colors ---------- */
+.btn-primary {
+  --bs-btn-bg: var(--accent);
+  --bs-btn-border-color: var(--accent);
+  --bs-btn-color: var(--paper);
+  --bs-btn-hover-bg: var(--ink);
+  --bs-btn-hover-border-color: var(--ink);
+  --bs-btn-hover-color: var(--paper);
+  --bs-btn-active-bg: var(--ink);
+  --bs-btn-active-border-color: var(--ink);
+  --bs-btn-active-color: var(--paper);
+  --bs-btn-disabled-bg: var(--stone);
+  --bs-btn-disabled-border-color: var(--stone);
+  --bs-btn-disabled-color: var(--paper);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--accent);
+  --bs-btn-border-color: var(--accent);
+  --bs-btn-hover-bg: var(--accent);
+  --bs-btn-hover-border-color: var(--accent);
+  --bs-btn-hover-color: var(--paper);
+  --bs-btn-active-bg: var(--accent);
+  --bs-btn-active-border-color: var(--accent);
+  --bs-btn-active-color: var(--paper);
+  --bs-btn-disabled-color: var(--muted);
+  --bs-btn-disabled-border-color: var(--stone);
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--ink);
+  --bs-btn-border-color: var(--linen);
+  --bs-btn-hover-bg: var(--linen);
+  --bs-btn-hover-border-color: var(--linen);
+  --bs-btn-hover-color: var(--ink);
+  --bs-btn-active-bg: var(--linen);
+  --bs-btn-active-border-color: var(--ink);
+  --bs-btn-active-color: var(--ink);
+}
+
+.form-control,
+.form-select {
+  background-color: var(--card);
+  color: var(--ink);
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.form-check-input:checked {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Bootstrap draws a red icon inside invalid fields; we keep only the border */
+.form-control.is-invalid { background-image: none; }
+
+.card {
+  --bs-card-bg: var(--card);
+  --bs-card-border-color: var(--linen);
+}
+
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--ink);
+  --bs-table-border-color: var(--linen);
+}
+
+.badge.bg-primary {
+  color: var(--paper);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: 2px;
+}
+
+/* Errors use the accent, normal messages use linen */
+.alert-primary {
+  --bs-alert-color: var(--accent);
+  --bs-alert-bg: var(--card);
+  --bs-alert-border-color: var(--accent);
+  --bs-alert-link-color: var(--accent);
+}
+
+.alert-secondary {
+  --bs-alert-color: var(--ink);
+  --bs-alert-bg: var(--card);
+  --bs-alert-border-color: var(--linen);
+  --bs-alert-link-color: var(--accent);
+}
+
+/* Alerts created by js/api.js float in the top right corner */
+.alert-area {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1080;
+  width: min(380px, calc(100% - 2rem));
+}
+
+.alert-area .alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+/* ---------- Header, navbar, footer (Flexbox) ---------- */
+.site-header,
+.site-nav {
+  background-color: var(--paper);
+  border-bottom: 1px solid var(--linen);
+}
+
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+}
+
+.header-bar {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  gap: 1rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
-.hover-lift {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+.brand {
+  font-size: 1.9rem;
+  font-weight: 600;
+  text-decoration: none;
 }
-.hover-lift:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+.brand:hover { color: var(--accent); }
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.brand-panel {
-  background: linear-gradient(160deg, #7a2e2e, #3f1717);
-  color: #fff;
+.account a:not(.btn) {
+  color: var(--ink);
+  text-decoration: none;
+}
+.account a:not(.btn):hover { color: var(--accent); }
+
+.nav-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 2rem;
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
 }
 
-.photo-preview {
-  width: 96px;
-  height: 96px;
+.nav-links {
+  display: flex;
+  gap: 1.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--ink);
+  text-decoration: none;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid transparent;
+}
+.nav-links a:hover { color: var(--accent); }
+.nav-links a.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.nav-search {
+  margin-left: auto;
+  flex: 0 1 280px;
+}
+
+.site-footer {
+  border-top: 1px solid var(--linen);
+  margin-top: 4rem;
+}
+
+.footer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.footer-bar .brand { font-size: 1.5rem; }
+
+/* ---------- Home page ---------- */
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 4rem;
+  padding: 4rem 0;
+}
+
+.hero-text { flex: 1; }
+.hero-text p { max-width: 34rem; }
+
+.hero-image {
+  flex: 0 0 240px;
+  aspect-ratio: 2 / 3;
+  background: var(--hero-image) center / cover no-repeat;
+  border: 1px solid var(--linen);
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.category-tile {
+  display: block;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--linen);
+  border-radius: var(--bs-border-radius);
+}
+.category-tile:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.category-tile img {
+  width: 100%;
+  height: 60px;
+  object-fit: contain;
+  margin-bottom: 0.5rem;
+}
+
+.theme-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.theme-switcher .btn[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---------- Book cards ---------- */
+.book-card {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--card);
+  border: 1px solid var(--linen);
+  border-radius: var(--bs-border-radius);
+  overflow: hidden;
+}
+
+.book-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
   object-fit: cover;
-  border-radius: 50%;
-  border: 3px solid #7a2e2e;
+  border-bottom: 1px solid var(--linen);
 }
 
-.page-head {
-  border-bottom: 3px solid #7a2e2e;
-  display: inline-block;
-  padding-bottom: 0.25rem;
+.book-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.25rem;
+  padding: 0.9rem;
+}
+
+.book-title {
+  font-size: calc(1.25rem * var(--heading-scale));
+  margin: 0;
+}
+.book-title a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.book-title a:hover { color: var(--accent); }
+
+.book-meta {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.book-card .btn { margin-top: auto; }
+.book-card .badge { align-self: flex-start; }
+
+/* ---------- Catalog page: Flexbox layout + Grid of cards ---------- */
+.catalog-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 2.5rem;
+}
+
+.filters {
+  flex: 0 0 220px;
+}
+
+.filters fieldset {
+  border-top: 1px solid var(--linen);
+  padding-top: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.filters legend {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+.results {
+  flex: 1;
+  min-width: 0; /* lets the grid shrink inside the flex item */
+}
+
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--linen);
+}
+
+/* ---------- Book page ---------- */
+.book-detail {
+  display: flex;
+  gap: 3rem;
+  align-items: flex-start;
+}
+
+.book-detail .book-cover {
+  flex: 0 0 260px;
+  width: 260px;
+  border: 1px solid var(--linen);
+}
+
+.book-detail-text { flex: 1; }
+
+/* Genre / Year / Rating as a two-column list */
+.book-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.35rem 1.5rem;
+  padding: 1rem 0;
+  margin: 1rem 0;
+  border-top: 1px solid var(--linen);
+  border-bottom: 1px solid var(--linen);
+}
+.book-facts dt {
+  font-weight: 400;
+  color: var(--muted);
+}
+.book-facts dd { margin: 0; }
+
+.about-quote {
+  margin: 2rem 0 0;
+  padding: 0.5rem 0 0.5rem 1.25rem;
+  border-left: 1px solid var(--accent);
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-size: 1.4rem;
+  line-height: 1.4;
+}
+
+/* Open Library subjects: thin outlined tags, not accent-colored */
+.subject-badge {
+  color: var(--ink);
+  font-weight: 400;
+  border: 1px solid var(--linen);
+  border-radius: 2px;
+  white-space: normal;
+  text-align: left;
+}
+
+.review {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--linen);
+}
+
+/* ---------- Simple centered forms (register, login) ---------- */
+.form-page {
+  max-width: 460px;
+  margin: 3rem auto 0;
+}
+
+/* ---------- Responsive rules ---------- */
+@media (max-width: 992px) {
+  .book-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .book-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* The sidebar moves above the results */
+  .catalog-layout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filters { flex-basis: auto; }
+
+  .hero,
+  .book-detail {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2rem;
+  }
+  .hero { padding: 2.5rem 0; }
+  .hero-image { flex-basis: auto; width: 200px; }
+  .book-detail .book-cover { flex-basis: auto; width: 200px; }
+
+  .nav-search {
+    margin-left: 0;
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .book-grid { grid-template-columns: 1fr; }
+  h1 { font-size: calc(2.1rem * var(--heading-scale)); }
+  .brand { font-size: 1.5rem; }
 }

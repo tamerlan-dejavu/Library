@@ -1,0 +1,74 @@
+{
+  "search": {
+    "numFound": 101168,
+    "docs": [
+      {
+        "author_name": [
+          "Lewis Carroll"
+        ],
+        "cover_i": 10527843,
+        "edition_count": 3549,
+        "first_publish_year": 1865,
+        "isbn": [
+          "1676166793",
+          "1717505597",
+          "2237005001"
+        ],
+        "key": "/works/OL138052W",
+        "publisher": [
+          "Sterling Publishing Co., Inc.",
+          "Audio Literature",
+          "The Sunbeam Pub."
+        ],
+        "title": "Alice's Adventures in Wonderland",
+        "subject": [
+          "Alice (fictitious character : carroll), fiction",
+          "British and irish fiction (fictional works by one author)",
+          "Fiction, fantasy, general"
+        ]
+      },
+      {
+        "author_name": [
+          "Charles Dickens"
+        ],
+        "cover_i": 12875748,
+        "edition_count": 3196,
+        "first_publish_year": 1843,
+        "isbn": [
+          "9781976725166",
+          "9780244231699",
+          "9781702838603"
+        ],
+        "key": "/works/OL32466W",
+        "publisher": [
+          "Audio Literature",
+          "W.W. Norton & Co.",
+          "Books on Tape, Inc."
+        ],
+        "title": "A Christmas Carol",
+        "subject": [
+          "Children's fiction",
+          "Christmas, fiction",
+          "Christmas"
+        ]
+      }
+    ]
+  },
+  "work_with_object_description": {
+    "key": "/works/OL138052W",
+    "title": "Alice's Adventures in Wonderland",
+    "description": {
+      "type": "/type/text",
+      "value": "Alice's Adventures in Wonderland (commonly Alice in Wonderland) is an 1865 English children's novel by Lewis Carroll. A young girl named Alice falls through a rabbit hole into a fantasy world of anthropomorphic creatures. It is seen as an example of the literary nonsense genre.\r\n\r\nOne of the best-known works of Victorian literature, its narrative, structure, characters and imagery have had huge influence on popular culture and literature, especially in the fantasy genre."
+    }
+  },
+  "work_with_string_description": {
+    "key": "/works/OL32466W",
+    "title": "A Christmas Carol",
+    "description": "A reprinting of the 1843 first edition, complete with the original illustrations, is supplemented by over eighty related sketches and annotations on and analyses of the text and historical notes on the writing of \"The Christmas Carol.\""
+  },
+  "work_without_description": {
+    "key": "/works/OL1W",
+    "title": "Untitled"
+  }
+}

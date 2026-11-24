@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Book - Book Catalog</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <script src="js/theme.js"></script>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+<header class="site-header">
+  <div class="container header-bar">
+    <a href="index.html" class="brand">Book Catalog</a>
+    <div id="account" class="account"></div>
+  </div>
+</header>
+
+<nav class="site-nav" aria-label="Main">
+  <div class="container nav-bar">
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="catalog.html" class="active" aria-current="page">Catalog</a></li>
+      <li><a href="profile.html">Profile</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+    <form action="catalog.html" method="get" class="nav-search" role="search">
+      <input type="search" name="q" class="form-control form-control-sm" placeholder="Search by title or author" aria-label="Search books">
+    </form>
+  </div>
+</nav>
+
+<div id="alertArea" class="alert-area" aria-live="polite"></div>
+
+<main class="container flex-grow-1">
+
+  <div id="notFound" class="alert alert-secondary mt-5 d-none" role="alert"></div>
+
+  <div id="bookArea">
+    <section class="book-detail pt-5">
+      <div id="coverBox"></div>
+      <div class="book-detail-text">
+        <span id="bestsellerBadge" class="badge bg-primary mb-2 d-none">Bestseller</span>
+        <h1 id="bookTitle" class="mb-1">Loading...</h1>
+        <p id="bookAuthors" class="lead text-muted-ink"></p>
+        <dl id="bookDetails" class="book-facts"></dl>
+        <p id="bookDescription"></p>
+        <div id="borrowBox"></div>
+      </div>
+    </section>
+
+    <section class="section mt-4" aria-label="From Open Library">
+      <div class="card">
+        <div class="card-body p-4">
+          <p class="eyebrow">From Open Library</p>
+          <p id="olStatus" class="text-muted-ink mb-0">
+            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading data from Open Library...
+          </p>
+          <div id="olData" class="d-none">
+            <dl id="olFacts" class="book-facts mt-0"></dl>
+            <div id="olSubjects" class="d-flex flex-wrap gap-2 mb-3"></div>
+            <a id="olLink" href="https://openlibrary.org" target="_blank" rel="noopener">View on Open Library</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="mb-3">Reviews</h2>
+      <div id="reviewList"></div>
+    </section>
+
+    <section class="section">
+      <h2 class="mb-3">Write your review</h2>
+
+      <p id="signInToReview" class="d-none"><a href="login.html">Sign in to write a review</a></p>
+
+      <form id="reviewForm" class="d-none" style="max-width: 560px" novalidate onsubmit="submitReview(); return false;">
+        <div class="mb-3">
+          <label for="rating" class="form-label">Rating</label>
+          <select id="rating" name="rating" class="form-select">
+            <option value="5">5 - excellent</option>
+            <option value="4">4 - good</option>
+            <option value="3">3 - okay</option>
+            <option value="2">2 - weak</option>
+            <option value="1">1 - bad</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="comment" class="form-label">Comment</label>
+          <textarea id="comment" name="comment" class="form-control" rows="4" placeholder="What did you think?"></textarea>
+        </div>
+        <div id="reviewError" class="alert alert-primary d-none" role="alert"></div>
+        <button type="submit" class="btn btn-primary">Send review</button>
+      </form>
+    </section>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-bar">
+    <div>
+      <p class="brand mb-1">Book Catalog</p>
+      <p class="text-muted-ink mb-0">Discover, borrow and read your favorite books.</p>
+      <p class="small text-muted-ink mt-3 mb-0">Created by Bauyrzhan Tamerlan</p>
+    </div>
+    <div>
+      <p class="mb-1"><a href="catalog.html">Browse the catalog</a></p>
+      <p class="mb-0"><a href="about.html">About &amp; contact</a></p>
+    </div>
+  </div>
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/header.js"></script>
+<script src="js/books.js"></script>
+<script src="js/book.js"></script>
+<script src="js/openlibrary.js"></script>
+</body>
+</html>
