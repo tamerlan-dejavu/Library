@@ -3,6 +3,7 @@
 # (see config/test_runner.py). Each test class creates the rows it needs,
 # so the tests do not depend on the data from db/seed.sql.
 import json
+import tempfile
 from datetime import timedelta
 from pathlib import Path
 
@@ -12,7 +13,7 @@ from django.db import IntegrityError, connection, transaction
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.utils import timezone
 
-from .management.commands import import_books
+from .management.commands import download_covers, import_books
 from .models import (
     Author, Book, BookAuthor, Category, Librarian, Loan, Member,
     MemberPhone, Publisher, Reservation, Review,
@@ -471,3 +472,33 @@ class OpenLibraryParsingTests(SimpleTestCase):
         self.assertEqual(import_books.bestseller_keys(docs), {"b", "c"})
         self.assertEqual(import_books.cover_url(10527843),
                          "https://covers.openlibrary.org/b/id/10527843-L.jpg")
+
+
+# ---------- download_covers: URL and path logic, no network ----------
+
+class CoverPathTests(SimpleTestCase):
+    def test_only_open_library_covers_are_downloaded(self):
+        self.assertTrue(download_covers.is_open_library_cover(
+            "https://covers.openlibrary.org/b/id/10527843-L.jpg"))
+        self.assertFalse(download_covers.is_open_library_cover("covers/7.jpg"))
+        self.assertFalse(download_covers.is_open_library_cover(None))
+
+    def test_medium_url(self):
+        self.assertEqual(
+            download_covers.medium_url("https://covers.openlibrary.org/b/id/10527843-L.jpg"),
+            "https://covers.openlibrary.org/b/id/10527843-M.jpg")
+
+    def test_file_path_and_database_value(self):
+        folder = Path("front") / "covers"
+        self.assertEqual(download_covers.cover_path(42, folder), folder / "42.jpg")
+        # relative, no leading slash: works from catalog.html and book.html
+        self.assertEqual(download_covers.cover_url_for(42), "covers/42.jpg")
+
+    def test_small_or_missing_files_are_downloaded_again(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            self.assertFalse(download_covers.has_good_file(folder / "1.jpg"))   # missing
+            (folder / "2.jpg").write_bytes(b"x" * 100)                          # too small
+            self.assertFalse(download_covers.has_good_file(folder / "2.jpg"))
+            (folder / "3.jpg").write_bytes(b"x" * 5000)                         # good
+            self.assertTrue(download_covers.has_good_file(folder / "3.jpg"))
