@@ -11,10 +11,30 @@ REPO_DIR = BASE_DIR.parent
 # Read variables from the .env file in the repository root (if it exists)
 load_dotenv(REPO_DIR / ".env")
 
+
+
+def env_list(name):
+    # "a.com, b.com" -> ["a.com", "b.com"]; empty or missing -> []
+    return [item.strip() for item in os.getenv(name, "").split(",") if item.strip()]
+
+
 SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 DEBUG = os.getenv("DEBUG", "False") == "True"
-# Comma-separated list, e.g. "localhost,127.0.0.1,myapp.onrender.com"
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+
+# Vercel preview/production domains and local runs are always allowed;
+# extra hosts (e.g. a custom domain) come from ALLOWED_HOSTS
+ALLOWED_HOSTS = [".vercel.app", "localhost", "127.0.0.1"] + env_list("ALLOWED_HOSTS")
+
+# POST requests from these https origins pass the CSRF check
+# (extra origins, e.g. "https://books.example.com", from CSRF_TRUSTED_ORIGINS)
+CSRF_TRUSTED_ORIGINS = ["https://*.vercel.app"] + env_list("CSRF_TRUSTED_ORIGINS")
+
+if not DEBUG:
+    # Cookies are sent over https only
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Vercel ends https in front of Django and tells us via this header
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -77,13 +97,25 @@ TIME_ZONE = "Asia/Qyzylorda"
 USE_I18N = True
 USE_TZ = True
 
-# Static files of the admin site, collected by "collectstatic"
+# Static files of the admin site. "collectstatic" copies them to STATIC_ROOT
+# (Vercel runs it during the build and serves them from its CDN).
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# WhiteNoise also serves the frontend folder at the site root:
+# Compressed files with a hash in the name (base.4f2a1c.css), so browsers
+# can cache them forever
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
+
+# The frontend folder (front/ in the repository root)
+FRONTEND_DIR = REPO_DIR / "front"
+
+# WhiteNoise serves the frontend at the site root:
 # "/" -> front/index.html, "/catalog.html" -> front/catalog.html
-WHITENOISE_ROOT = REPO_DIR / "front"
+# (config/urls.py has a fallback for hosts where WhiteNoise is not active)
+WHITENOISE_ROOT = FRONTEND_DIR
 WHITENOISE_INDEX_FILE = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
