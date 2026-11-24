@@ -19,8 +19,10 @@ copy .env.example .env           # then fill in the values (cp on macOS/Linux)
 cd back
 python manage.py migrate                 # Django tables (auth, sessions, admin)
 python db/run_sql.py db/schema.sql       # catalog tables (drops them first!)
-python db/run_sql.py db/seed.sql         # demo data
-python manage.py import_books            # optional: ~70 real books from Open Library
+python db/run_sql.py db/seed.sql         # demo data (made by db/generate_seed.py, no network)
+python db/run_sql.py db/procedures.sql   # stored functions
+python db/run_sql.py db/security.sql     # roles and permissions (when present)
+python manage.py import_books            # optional: ~70 extra books from Open Library
 python manage.py createsuperuser         # login for /admin/
 python manage.py runserver               # http://127.0.0.1:8000
 ```
@@ -30,6 +32,14 @@ Set `DEBUG=True` in `.env` on your computer. With `DEBUG=False`, run
 over plain http then, because cookies are marked secure.
 
 Tests: `python manage.py test` (in `back/`).
+
+SQL reports for the DBMS project (saved in `docs/sql_results/`):
+
+```bash
+python db/run_sql.py db/structure.sql --out ../docs/sql_results/structure.txt
+python db/run_sql.py db/queries.sql --out ../docs/sql_results/queries.txt
+python db/run_sql.py db/call_functions.sql --out ../docs/sql_results/functions.txt
+```
 
 ## Deploy to Vercel
 
