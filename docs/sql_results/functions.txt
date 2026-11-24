@@ -1,0 +1,68 @@
+Results of call_functions.sql
+
+-- Calls each stored function from procedures.sql once.
+-- Run: python db/run_sql.py db/call_functions.sql --out ../docs/sql_results/functions.txt
+-- Books rated above the overall average, at least 2 reviews
+book_id | title                                   | avg_rating | review_count
+--------+-----------------------------------------+------------+-------------
+49      | Fahrenheit 451                          | 5.00       | 2
+53      | 2001: A Space Odyssey                   | 5.00       | 2
+83      | Northern Lights                         | 4.67       | 3
+68      | Трудно быть богом                       | 4.50       | 4
+92      | The Hound of the Baskervilles           | 4.50       | 2
+129     | Becoming                                | 4.50       | 2
+134     | Educated                                | 4.50       | 2
+62      | Solaris                                 | 4.50       | 2
+126     | Аз и Я                                  | 4.50       | 2
+32      | Преступление и наказание                | 4.50       | 2
+78      | American Gods                           | 4.33       | 3
+58      | Frankenstein                            | 4.00       | 4
+5       | Pride and Prejudice                     | 4.00       | 3
+36      | Мёртвые души                            | 4.00       | 3
+76      | A Wizard of Earthsea                    | 4.00       | 3
+118     | A Short History of Nearly Everything    | 4.00       | 2
+35      | Евгений Онегин                          | 4.00       | 2
+107     | Азазель                                 | 4.00       | 2
+91      | And Then There Were None                | 4.00       | 2
+132     | The Autobiography of Malcolm X          | 4.00       | 2
+43      | Көшпенділер                             | 4.00       | 2
+123     | How to Win Friends and Influence People | 4.00       | 2
+(22 rows)
+
+-- Members with overdue loans today
+member_id | full_name           | overdue_loans | max_days_overdue
+----------+---------------------+---------------+-----------------
+98        | Мөлдір Ахметқызы    | 1             | 285
+39        | Oliver Walker       | 1             | 284
+81        | Никита Соколов      | 1             | 259
+89        | Татьяна Соколова    | 1             | 250
+103       | Гүлнұр Жұмабекова   | 1             | 231
+58        | Сәуле Әбдірахманова | 1             | 198
+59        | Ольга Попова        | 1             | 173
+113       | Үміт Қасымова       | 1             | 150
+12        | Michael Walker      | 1             | 134
+94        | Екатерина Лебедева  | 1             | 131
+96        | Әлішер Қасымов      | 1             | 130
+68        | Arman Kim           | 1             | 120
+123       | Ерғали Нұрғалиев    | 1             | 114
+77        | Дана Сәрсенбаева    | 1             | 106
+73        | Дмитрий Лебедев     | 1             | 97
+3         | Alikhan Bekov       | 2             | 79
+111       | Айгерім Бекқызы     | 1             | 73
+57        | James Wilson        | 1             | 41
+104       | Daniel Brown        | 1             | 35
+115       | Olivia Smith        | 1             | 27
+9         | Sarah Johnson       | 1             | 10
+121       | Наталья Смирнова    | 1             | 9
+(22 rows)
+
+-- Fantasy books nobody has borrowed yet
+book_id | title                                | category_name
+--------+--------------------------------------+--------------
+86      | Jonathan Strange & Mr Norrell        | Fantasy
+72      | The Fellowship of the Ring           | Fantasy
+85      | The Last Wish                        | Fantasy
+74      | The Lion, the Witch and the Wardrobe | Fantasy
+79      | The Name of the Wind                 | Fantasy
+87      | The Neverending Story                | Fantasy
+(6 rows)

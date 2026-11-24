@@ -347,6 +347,28 @@ a:hover { color: var(--ink); }
   margin-bottom: 0.5rem;
 }
 
+/* "About this project": facts on the left, functions on the right */
+.project-info {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 3rem;
+  align-items: start;
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.feature-list li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--linen);
+}
+
+@media (max-width: 768px) {
+  .project-info { grid-template-columns: 1fr; gap: 1.5rem; }
+}
+
 .theme-switcher {
   display: flex;
   flex-wrap: wrap;
@@ -373,6 +395,9 @@ a:hover { color: var(--ink); }
   aspect-ratio: 2 / 3;
   object-fit: cover;
   border-bottom: 1px solid var(--linen);
+  /* The placeholder shows behind the image while a slow cover is still
+     loading; the real cover covers it as soon as it arrives */
+  background: url("../assets/book-placeholder.svg") center / cover no-repeat;
 }
 
 .book-card-body {

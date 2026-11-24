@@ -1,0 +1,292 @@
+Results of queries.sql
+
+-- Demonstration queries for the Book Catalog database (read-only)
+-- Run: python db/run_sql.py db/queries.sql --out ../docs/sql_results/queries.txt
+-- Sections: J = joins, A = aggregates, S = subqueries
+-- JOINS
+-- J1 and J2 together use all 11 tables. One query with all 11 tables
+-- would multiply rows: a member with 3 loans, 2 phones and 4 reviews
+-- would appear 3 * 2 * 4 = 24 times. So J1 follows the "loan" path and
+-- J2 brings the other member data (phones, reviews, reservations).
+-- J1. Last 15 loans with full details (INNER JOIN over 8 tables):
+--     who borrowed which book, its author, genre and publisher, and which
+--     librarian gave it out. Only rows that match in every table remain.
+--     A book with two authors gives two rows (one per author).
+loan_id | loan_date  | member             | title                                  | author             | genre       | publisher        | librarian
+--------+------------+--------------------+----------------------------------------+--------------------+-------------+------------------+----------------
+57      | 2026-11-24 | Никита Лебедев     | In the Woods                           | Tana French        | Mystery     | Simon & Schuster | Айдос Нұрланұлы
+85      | 2026-11-24 | Аңсар Әбдірахманов | Көшпенділер                            | Ілияс Есенберлин   | Fiction     | Фолиант          | Michael Brown
+89      | 2026-11-24 | James Johnson      | Becoming                               | Michelle Obama     | Biography   | Alfred A. Knopf  | Айдос Нұрланұлы
+165     | 2026-11-24 | Сергей Волков      | Twenty Thousand Leagues Under the Seas | Jules Verne        | Sci-Fi      | Scribner         | Michael Brown
+177     | 2026-11-24 | Іңкәр Ахметқызы    | To Kill a Mockingbird                  | Harper Lee         | Fiction     | Picador          | Айдос Нұрланұлы
+44      | 2026-11-23 | Dana Sadykova      | Туманность Андромеды                   | Иван Ефремов       | Sci-Fi      | АСТ              | Елена Петрова
+178     | 2026-11-23 | Иван Смирнов       | Gone Girl                              | Gillian Flynn      | Mystery     | Doubleday        | Айдос Нұрланұлы
+63      | 2026-11-22 | Nursultan Kim      | Life of Pi                             | Yann Martel        | Fiction     | Simon & Schuster | Online
+160     | 2026-11-22 | Никита Морозов     | Пикник на обочине                      | Борис Стругацкий   | Sci-Fi      | Эксмо            | Айдос Нұрланұлы
+160     | 2026-11-22 | Никита Морозов     | Пикник на обочине                      | Аркадий Стругацкий | Sci-Fi      | Эксмо            | Айдос Нұрланұлы
+23      | 2026-11-21 | Sophie Smith       | Jane Eyre                              | Charlotte Brontë   | Fiction     | Random House     | Online
+77      | 2026-11-21 | Іңкәр Тұрсынова    | The Murders in the Rue Morgue          | Edgar Allan Poe    | Mystery     | Scribner         | Michael Brown
+168     | 2026-11-21 | Қуаныш Бекұлы      | Sapiens: A Brief History of Humankind  | Yuval Noah Harari  | Non-Fiction | Bloomsbury       | Айдос Нұрланұлы
+53      | 2026-11-20 | Қуаныш Жұмабеков   | In the Woods                           | Tana French        | Mystery     | Simon & Schuster | Online
+161     | 2026-11-20 | Бауыржан Серікұлы  | The Old Man and the Sea                | Ernest Hemingway   | Fiction     | Alfred A. Knopf  | Елена Петрова
+(15 rows)
+
+-- J2. Members with their phones, reviews and reservations (LEFT JOIN).
+--     LEFT JOIN keeps a member even when a joined table has no rows for
+--     that member (then its columns are NULL and COUNT gives 0).
+--     COUNT(DISTINCT ...) removes the duplicates caused by joining
+--     three 1:N tables at once.
+member_id | full_name            | phones                     | reviews | reservations
+----------+----------------------+----------------------------+---------+-------------
+25        | Сәуле Бекқызы        | +77052872269               | 7       | 0
+31        | Alikhan Akhmetov     | +77754990112, +77771224284 | 4       | 2
+61        | Arman Bekov          | +77759792896               | 4       | 1
+89        | Татьяна Соколова     | +77012937099               | 4       | 1
+22        | Никита Морозов       | +77473293399               | 4       | 0
+16        | Madina Omarova       | +77027549319               | 3       | 2
+18        | Дәурен Құдайбергенов | +77052164813, +77789861412 | 3       | 2
+46        | Thomas Smith         | +77027229768               | 3       | 2
+76        | William Smith        | +77474828304, +77719403421 | 3       | 2
+122       | Іңкәр Ахметқызы      | +77019375061               | 3       | 2
+24        | Аңсар Сәрсенбаев     | +77028431778, +77478950276 | 3       | 1
+44        | Aigerim Bekova       | +77014720376, +77710816348 | 3       | 1
+54        | Ерлан Нұрғалиев      | +77758389915               | 3       | 1
+35        | Aigerim Kim          | +77715794356               | 3       | 0
+38        | Мария Соколова       | +77024487430, +77774159388 | 3       | 0
+(15 rows)
+
+-- J3. Members who never borrowed a book (RIGHT JOIN).
+--     RIGHT JOIN keeps every member (the right table); members without
+--     a matching loan get NULL in l.loan_id, and we keep only those.
+member_id | full_name             | city
+----------+-----------------------+----------
+5         | Grace Johnson         | Қызылорда
+11        | Nursultan Zhaksylykov | Қарағанды
+13        | Сәуле Қасымова        | Қызылорда
+19        | Emma Brown            | Павлодар
+21        | Бауыржан Тұрсынов     | Қарағанды
+28        | Сәуле Өтебаева        | Павлодар
+34        | Аружан Қасымова       | Алматы
+36        | Kamila Sadykova       | NULL
+45        | Әлішер Сәрсенбаев     | Шымкент
+46        | Thomas Smith          | Қарағанды
+48        | Иван Попов            | Алматы
+50        | Dias Bekov            | Қарағанды
+53        | Aruzhan Akhmetova     | NULL
+75        | Жанар Өтебаева        | Қарағанды
+78        | Гүлнұр Серікқызы      | Қызылорда
+85        | Grace Walker          | NULL
+87        | William Clark         | Астана
+88        | Шаһмардан Бекұлы      | Павлодар
+91        | Emma Smith            | Қарағанды
+97        | Grace Smith           | Өскемен
+105       | Михаил Кузнецов       | Павлодар
+108       | Arman Akhmetov        | Өскемен
+110       | Бауыржан Жұмабеков    | Қызылорда
+114       | Алексей Кузнецов      | Қарағанды
+117       | Dana Akhmetova        | Қызылорда
+120       | Emma Clark            | NULL
+(26 rows)
+
+-- AGGREGATES (COUNT, SUM, AVG, MIN, MAX, GROUP BY, HAVING)
+-- A1. Loans per genre: how many, how many are overdue now, and the
+--     average loan length in days (for open loans we count until today).
+genre       | loans | overdue_now | avg_days
+------------+-------+-------------+---------
+Fiction     | 52    | 10          | 36.4
+Mystery     | 33    | 4           | 34.5
+Sci-Fi      | 31    | 2           | 17.7
+Non-Fiction | 22    | 1           | 22.9
+Fantasy     | 21    | 4           | 34.3
+Biography   | 21    | 2           | 23.5
+(6 rows)
+
+-- A2. Most active members: at least 3 loans (HAVING filters groups,
+--     WHERE would filter single rows). Reviews counted by a subquery
+--     so that the two counts do not multiply each other.
+full_name            | loans | reviews | first_loan | last_loan
+---------------------+-------+---------+------------+-----------
+Никита Морозов       | 5     | 4       | 2025-04-14 | 2026-11-22
+Аңсар Сәрсенбаев     | 4     | 3       | 2025-07-21 | 2026-09-28
+Dana Sadykova        | 4     | 2       | 2025-05-31 | 2026-11-23
+Дмитрий Лебедев      | 4     | 2       | 2025-04-20 | 2026-11-16
+Alikhan Bekov        | 4     | 2       | 2026-05-17 | 2026-10-01
+Oliver Walker        | 4     | 2       | 2025-02-15 | 2026-08-24
+Сәуле Бекқызы        | 3     | 7       | 2025-05-04 | 2026-09-23
+Alikhan Akhmetov     | 3     | 4       | 2026-05-21 | 2026-08-18
+Татьяна Соколова     | 3     | 4       | 2025-04-05 | 2026-03-05
+Іңкәр Ахметқызы      | 3     | 3       | 2025-05-08 | 2026-11-24
+Aigerim Kim          | 3     | 3       | 2025-03-19 | 2026-08-10
+Ерлан Нұрғалиев      | 3     | 3       | 2025-06-12 | 2026-08-25
+Dana Zhaksylykova    | 3     | 2       | 2025-05-26 | 2026-11-17
+Sarah Johnson        | 3     | 2       | 2025-08-06 | 2026-10-31
+Сәуле Әбдірахманова  | 3     | 2       | 2025-08-12 | 2026-04-26
+Ольга Попова         | 3     | 1       | 2025-05-10 | 2026-05-21
+Қуаныш Құдайбергенов | 3     | 1       | 2025-06-01 | 2026-05-02
+Arman Kim            | 3     | 1       | 2025-04-25 | 2026-07-13
+William Walker       | 3     | 0       | 2025-04-07 | 2025-12-03
+(19 rows)
+
+-- A3. Books per publisher with the oldest and newest publication year
+--     and the total number of copies on the shelves.
+publisher                 | books | oldest | newest | copies
+--------------------------+-------+--------+--------+-------
+Doubleday                 | 9     | 1851   | 2018   | 20
+Simon & Schuster          | 9     | 1939   | 2015   | 29
+Alfred A. Knopf           | 7     | 1952   | 2018   | 28
+Houghton Mifflin          | 7     | 1859   | 2008   | 12
+Penguin Books             | 7     | 1813   | 2010   | 22
+Азбука                    | 7     | 1862   | 1998   | 22
+Bloomsbury                | 6     | 1865   | 2011   | 19
+Gollancz                  | 6     | 1868   | 2003   | 17
+Picador                   | 6     | 1890   | 2015   | 9
+Scribner                  | 6     | 1841   | 2006   | 20
+АСТ                       | 6     | 1833   | 1967   | 17
+Эксмо                     | 6     | 1840   | 1975   | 11
+Ace Books                 | 5     | 1934   | 1993   | 17
+HarperCollins             | 5     | 1927   | 2018   | 13
+Hodder & Stoughton        | 5     | 1776   | 2007   | 15
+Secker & Warburg          | 5     | 1900   | 2001   | 22
+Viking Press              | 5     | 1847   | 2016   | 10
+Bantam Books              | 4     | 1962   | 2015   | 14
+Collins Crime Club        | 4     | 1903   | 2004   | 12
+Random House              | 4     | 1847   | 2010   | 14
+Tor Books                 | 4     | 1884   | 2005   | 6
+Allen & Unwin             | 3     | 1818   | 2011   | 5
+Del Rey                   | 3     | 1953   | 2012   | 8
+Faber & Faber             | 3     | 1951   | 1976   | 8
+Oxford University Press   | 3     | 1936   | 1988   | 8
+Фолиант                   | 3     | 1909   | 1974   | 8
+Vintage                   | 2     | 1791   | 2011   | 5
+Little, Brown and Company | 1     | 1969   | 1969   | 3
+Атамұра                   | 1     | 1923   | 1923   | 3
+Жазушы                    | 1     | 1956   | 1956   | 5
+(30 rows)
+
+-- SUBQUERIES
+-- S1. Scalar subquery: books whose average rating is above the average
+--     of all reviews. The subquery returns exactly one number.
+title                                  | avg_rating | reviews
+---------------------------------------+------------+--------
+2001: A Space Odyssey                  | 5.00       | 2
+Fahrenheit 451                         | 5.00       | 2
+To Kill a Mockingbird                  | 5.00       | 1
+Герой нашего времени                   | 5.00       | 1
+The Grapes of Wrath                    | 5.00       | 1
+Long Walk to Freedom                   | 5.00       | 1
+Homo Deus: A Brief History of Tomorrow | 5.00       | 1
+Guns, Germs, and Steel                 | 5.00       | 1
+Einstein: His Life and Universe        | 5.00       | 1
+A Game of Thrones                      | 5.00       | 1
+Sapiens: A Brief History of Humankind  | 5.00       | 1
+The Martian                            | 5.00       | 1
+Life of Pi                             | 5.00       | 1
+Do Androids Dream of Electric Sheep?   | 5.00       | 1
+Jane Eyre                              | 5.00       | 1
+(15 rows)
+
+-- S2. EXISTS with a correlated subquery: members who have an overdue loan.
+--     The inner query uses m.member_id, so it runs for every member.
+member_id | full_name           | email
+----------+---------------------+-----------------------------------
+3         | Alikhan Bekov       | alikhan.bekov56@example.com
+68        | Arman Kim           | arman.kim47@example.com
+104       | Daniel Brown        | daniel.brown11@example.com
+57        | James Wilson        | james.wilson22@example.com
+12        | Michael Walker      | michael.walker67@example.com
+39        | Oliver Walker       | oliver.walker26@example.com
+115       | Olivia Smith        | olivia.smith68@example.com
+9         | Sarah Johnson       | sarah.johnson84@example.com
+111       | Айгерім Бекқызы     | aygerim.bekqyzy43@example.com
+96        | Әлішер Қасымов      | alisher.qasymov51@example.com
+103       | Гүлнұр Жұмабекова   | gulnur.zhumabekova87@example.com
+77        | Дана Сәрсенбаева    | dana.sarsenbaeva17@example.com
+73        | Дмитрий Лебедев     | dmitriy.lebedev28@example.com
+94        | Екатерина Лебедева  | ekaterina.lebedeva74@example.com
+123       | Ерғали Нұрғалиев    | ergali.nurgaliev4@example.com
+98        | Мөлдір Ахметқызы    | moldir.akhmetqyzy20@example.com
+121       | Наталья Смирнова    | natalya.smirnova94@example.com
+81        | Никита Соколов      | nikita.sokolov59@example.com
+59        | Ольга Попова        | olga.popova60@example.com
+58        | Сәуле Әбдірахманова | saule.abdirakhmanova73@example.com
+89        | Татьяна Соколова    | tatyana.sokolova93@example.com
+113       | Үміт Қасымова       | umit.qasymova7@example.com
+(22 rows)
+
+-- S3. NOT EXISTS: books that were never borrowed.
+--     (NOT IN would also work here because loan.book_id has no NULLs.)
+book_id | title
+--------+----------------------------------------
+1       | 1984
+133     | Alexander Hamilton
+2       | Animal Farm
+119     | Atomic Habits
+50      | Brave New World
+52      | Do Androids Dream of Electric Sheep?
+46      | Dune
+134     | Educated
+135     | Elon Musk
+47      | Foundation
+58      | Frankenstein
+15      | Great Expectations
+123     | How to Win Friends and Influence People
+66      | Hyperion
+86      | Jonathan Strange & Mr Norrell
+13      | Moby-Dick
+7       | One Hundred Years of Solitude
+120     | Quiet
+64      | Stranger in a Strange Land
+10      | The Alchemist
+136     | The Autobiography of Benjamin Franklin
+28      | The Book Thief
+130     | The Diary of a Young Girl
+72      | The Fellowship of the Ring
+9       | The Grapes of Wrath
+29      | The Handmaid's Tale
+141     | The Immortal Life of Henrietta Lacks
+85      | The Last Wish
+65      | The Left Hand of Darkness
+74      | The Lion, the Witch and the Wardrobe
+79      | The Name of the Wind
+87      | The Neverending Story
+23      | The Picture of Dorian Gray
+26      | The Road
+117     | The Selfish Gene
+113     | Thinking, Fast and Slow
+42      | Абай жолы
+33      | Братья Карамазовы
+34      | Вишнёвый сад
+70      | Мы
+40      | Тихий Дон
+44      | Ұлпан
+(42 rows)
+
+-- S4. IN: authors who wrote at least one bestseller.
+--     The subquery returns a list of author ids.
+full_name          | country
+-------------------+---------------
+Adam Smith         | United Kingdom
+Arthur C. Clarke   | United Kingdom
+Dashiell Hammett   | United States
+Dorothy L. Sayers  | United Kingdom
+Edgar Allan Poe    | United States
+George Orwell      | United Kingdom
+Gillian Flynn      | United States
+Herman Melville    | United States
+J.R.R. Tolkien     | United Kingdom
+James Clear        | United States
+Jane Austen        | United Kingdom
+L. Frank Baum      | United States
+Mahatma Gandhi     | India
+Maya Angelou       | United States
+Nelson Mandela     | South Africa
+Stephen J. Dubner  | United States
+Steven Levitt      | United States
+Stieg Larsson      | Sweden
+Ursula K. Le Guin  | United States
+Victor Hugo        | France
+Walter Isaacson    | United States
+Аркадий Стругацкий | Россия
+Борис Стругацкий   | Россия
+Иван Ефремов       | Россия
+(24 rows)
