@@ -1,16 +1,13 @@
-"""
-WSGI config for config project.
-
-It exposes the WSGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
-"""
-
+"""WSGI entry point (used by Vercel and by gunicorn)."""
 import os
+import sys
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+# Vercel imports this file from the repository root, so back/ is not on
+# sys.path and "import config" would fail. manage.py does this for us locally.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 application = get_wsgi_application()
