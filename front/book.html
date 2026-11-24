@@ -54,7 +54,23 @@
       </div>
     </section>
 
-    <section class="section mt-4">
+    <section class="section mt-4" aria-label="From Open Library">
+      <div class="card">
+        <div class="card-body p-4">
+          <p class="eyebrow">From Open Library</p>
+          <p id="olStatus" class="text-muted-ink mb-0">
+            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading data from Open Library...
+          </p>
+          <div id="olData" class="d-none">
+            <dl id="olFacts" class="book-facts mt-0"></dl>
+            <div id="olSubjects" class="d-flex flex-wrap gap-2 mb-3"></div>
+            <a id="olLink" href="https://openlibrary.org" target="_blank" rel="noopener">View on Open Library</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
       <h2 class="mb-3">Reviews</h2>
       <div id="reviewList"></div>
     </section>
@@ -105,5 +121,6 @@
 <script src="js/header.js"></script>
 <script src="js/books.js"></script>
 <script src="js/book.js"></script>
+<script src="js/openlibrary.js"></script>
 </body>
 </html>

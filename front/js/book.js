@@ -59,7 +59,8 @@ function renderReviews(reviews) {
   }
 }
 
-// Loads the book from the API and fills the page
+// Loads the book from the API and fills the page.
+// Returns the book, or null if it could not be loaded.
 async function loadBook() {
   let book;
   try {
@@ -70,7 +71,7 @@ async function loadBook() {
     } else {
       showAlert("Could not load the book. " + err.message);
     }
-    return;
+    return null;
   }
 
   document.title = book.title + " - Book Catalog";
@@ -98,6 +99,16 @@ async function loadBook() {
   buttonBox.appendChild(createBorrowButton(book, loadBook));
 
   renderReviews(book.reviews);
+  return book;
+}
+
+// First load of the page: the book, then the Open Library card
+// (only once, not after every borrow or review)
+async function startPage() {
+  const book = await loadBook();
+  if (book !== null) {
+    loadOpenLibrary(book);
+  }
 }
 
 // Shows the review form only to logged-in users
@@ -135,9 +146,12 @@ async function submitReview() {
   loadBook();
 }
 
-if (bookId === null || bookId === "") {
-  showNotFound("No book was selected. Please choose one in the catalog.");
-} else {
-  loadBook();
-  setupReviewForm();
-}
+// DOMContentLoaded waits until every script (also openlibrary.js) is loaded
+document.addEventListener("DOMContentLoaded", function () {
+  if (bookId === null || bookId === "") {
+    showNotFound("No book was selected. Please choose one in the catalog.");
+  } else {
+    startPage();
+    setupReviewForm();
+  }
+});

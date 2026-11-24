@@ -489,6 +489,16 @@ a:hover { color: var(--ink); }
   line-height: 1.4;
 }
 
+/* Open Library subjects: thin outlined tags, not accent-colored */
+.subject-badge {
+  color: var(--ink);
+  font-weight: 400;
+  border: 1px solid var(--linen);
+  border-radius: 2px;
+  white-space: normal;
+  text-align: left;
+}
+
 .review {
   padding: 1.25rem 0;
   border-bottom: 1px solid var(--linen);
