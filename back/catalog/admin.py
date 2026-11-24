@@ -3,7 +3,7 @@ from django.contrib import admin
 
 from .models import (
     Author, Book, BookAuthor, Category, Librarian,
-    Loan, Member, Publisher, Reservation, Review,
+    Loan, Member, MemberPhone, Publisher, Reservation, Review,
 )
 
 
@@ -44,11 +44,25 @@ class BookAuthorAdmin(admin.ModelAdmin):
     list_filter = ("author",)
 
 
+# Phones are edited inside the member page (weak entity of member)
+class MemberPhoneInline(admin.TabularInline):
+    model = MemberPhone
+    extra = 1
+
+
 @admin.register(Member)
 class MemberAdmin(admin.ModelAdmin):
-    list_display = ("member_id", "full_name", "email", "birth_year", "user", "registered_at")
-    search_fields = ("full_name", "email")
-    list_filter = ("birth_year",)
+    list_display = ("member_id", "full_name", "email", "birth_year", "city", "user", "registered_at")
+    search_fields = ("full_name", "email", "city", "memberphone__phone")
+    list_filter = ("city", "birth_year")
+    inlines = [MemberPhoneInline]
+
+
+@admin.register(MemberPhone)
+class MemberPhoneAdmin(admin.ModelAdmin):
+    list_display = ("member_phone_id", "member", "phone")
+    search_fields = ("phone", "member__full_name")
+    list_filter = ("member__city",)
 
 
 @admin.register(Librarian)
