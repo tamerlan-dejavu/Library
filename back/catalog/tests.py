@@ -9,7 +9,7 @@ from pathlib import Path
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection, transaction
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.utils import timezone
 
 from .management.commands import import_books
@@ -305,6 +305,119 @@ class StoredFunctionTests(CatalogTestData):
         Loan.objects.create(book=self.book1, member=self.other1, due_date="2099-01-01")
         rows = self.call("SELECT title FROM fn_unborrowed_books(%s)", ["test genre alpha"])
         self.assertEqual(rows, [(f"{TAG} Book Three",)])
+
+
+# Admin pages need static file URLs; the simple storage works without
+# running collectstatic first
+@override_settings(STORAGES={
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+})
+class AdminTests(CatalogTestData):
+    # Create, update and delete through the admin, and clear error messages
+
+    def setUp(self):
+        admin_user = User.objects.create_superuser("zzqx_admin", "zzqx@example.com", "pw")
+        self.client.force_login(admin_user)
+        self.today = timezone.localdate()
+
+    def book_form(self, **changes):
+        data = {"title": f"{TAG} Admin Book", "publication_year": "2020", "isbn": "",
+                "category": self.alpha.pk, "publisher": "", "description": "", "cover_url": "",
+                "total_copies": "3", "available_copies": "3"}
+        data.update(changes)
+        return data
+
+    def member_form(self, **changes):
+        # The phone inline needs Django's "management form" fields
+        data = {"full_name": "Zzqx Admin Member", "email": "", "birth_year": "1999",
+                "city": "Алматы", "street": "Абай даңғылы, 1", "user": "",
+                "memberphone_set-TOTAL_FORMS": "1", "memberphone_set-INITIAL_FORMS": "0",
+                "memberphone_set-MIN_NUM_FORMS": "0", "memberphone_set-MAX_NUM_FORMS": "1000",
+                "memberphone_set-0-phone": "+77010000001"}
+        data.update(changes)
+        return data
+
+    def loan_form(self, **changes):
+        data = {"book": self.book2.pk, "member": self.other1.pk, "librarian": "",
+                "loan_date": str(self.today), "due_date": str(self.today + timedelta(days=14)),
+                "return_date": ""}
+        data.update(changes)
+        return data
+
+    def test_book_create_update_delete(self):
+        r = self.client.post("/admin/catalog/book/add/", self.book_form())
+        self.assertEqual(r.status_code, 302)  # redirect = saved
+        book = Book.objects.get(title=f"{TAG} Admin Book")
+
+        r = self.client.post(f"/admin/catalog/book/{book.pk}/change/", self.book_form(total_copies="5"))
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(Book.objects.get(pk=book.pk).total_copies, 5)
+
+        r = self.client.post(f"/admin/catalog/book/{book.pk}/delete/", {"post": "yes"})
+        self.assertEqual(r.status_code, 302)
+        self.assertFalse(Book.objects.filter(pk=book.pk).exists())
+
+    def test_member_create_update_delete(self):
+        r = self.client.post("/admin/catalog/member/add/", self.member_form())
+        self.assertEqual(r.status_code, 302)
+        member = Member.objects.get(full_name="Zzqx Admin Member")
+        self.assertEqual(member.memberphone_set.get().phone, "+77010000001")
+        self.assertIsNotNone(member.registered_at)  # filled by DEFAULT now()
+
+        r = self.client.post(f"/admin/catalog/member/{member.pk}/change/",
+                             self.member_form(city="Астана", **{"memberphone_set-TOTAL_FORMS": "0"}))
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(Member.objects.get(pk=member.pk).city, "Астана")
+
+        r = self.client.post(f"/admin/catalog/member/{member.pk}/delete/", {"post": "yes"})
+        self.assertEqual(r.status_code, 302)
+        self.assertFalse(Member.objects.filter(pk=member.pk).exists())
+        self.assertFalse(MemberPhone.objects.filter(phone="+77010000001").exists())
+
+    def test_loan_create_update_delete(self):
+        r = self.client.post("/admin/catalog/loan/add/", self.loan_form())
+        self.assertEqual(r.status_code, 302)
+        loan = Loan.objects.get(book=self.book2, member=self.other1)
+
+        r = self.client.post(f"/admin/catalog/loan/{loan.pk}/change/",
+                             self.loan_form(return_date=str(self.today)))
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(Loan.objects.get(pk=loan.pk).return_date, self.today)
+
+        r = self.client.post(f"/admin/catalog/loan/{loan.pk}/delete/", {"post": "yes"})
+        self.assertEqual(r.status_code, 302)
+        self.assertFalse(Loan.objects.filter(pk=loan.pk).exists())
+
+    def test_duplicate_review_message(self):
+        # other1 already reviewed book1 (see setUpTestData)
+        r = self.client.post("/admin/catalog/review/add/",
+                             {"book": self.book1.pk, "member": self.other1.pk, "rating": "4", "comment": ""})
+        self.assertEqual(r.status_code, 200)  # the form is shown again with an error
+        self.assertContains(r, "Review with this Book and Member already exists.")
+
+    def test_rating_9_message(self):
+        r = self.client.post("/admin/catalog/review/add/",
+                             {"book": self.book2.pk, "member": self.member.pk, "rating": "9", "comment": ""})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Ensure this value is less than or equal to 5.")
+
+    def test_due_date_before_loan_date_message(self):
+        r = self.client.post("/admin/catalog/loan/add/",
+                             self.loan_form(due_date=str(self.today - timedelta(days=3))))
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Due date cannot be before the loan date.")
+
+    def test_delete_member_with_loans_is_refused(self):
+        Loan.objects.create(book=self.book2, member=self.other2, due_date=self.today + timedelta(days=7))
+        r = self.client.post(f"/admin/catalog/member/{self.other2.pk}/delete/", {"post": "yes"})
+        self.assertEqual(r.status_code, 200)  # not deleted, a page explains why
+        self.assertContains(r, "would require deleting the following protected related objects")
+        self.assertTrue(Member.objects.filter(pk=self.other2.pk).exists())
+
+    def test_admin_title(self):
+        r = self.client.get("/admin/")
+        self.assertContains(r, "Book Catalog administration")
 
 
 # ---------- Open Library import: parsing only, no network, no database ----------
