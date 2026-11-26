@@ -38,6 +38,8 @@ async function sendRequest(url, options) {
   if (!response.ok) {
     const error = new Error(data.error || "Request failed (status " + response.status + ").");
     error.status = response.status;
+    // Some answers also name the form field the error belongs to
+    error.field = data.field;
     throw error;
   }
 

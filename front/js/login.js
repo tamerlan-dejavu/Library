@@ -1,20 +1,20 @@
-// Login form: POST /api/login/, then go to the profile
+// Login form: POST /api/login/ with email and password, then go to the profile
 
 async function loginUser() {
-  const username = document.getElementById("username").value.trim();
+  const email = document.getElementById("email").value.trim().toLowerCase();
   const password = document.getElementById("password").value;
 
   hideBoxMessage("formError");
 
-  if (username === "" || password === "") {
-    showBoxMessage("formError", "Please enter your username and password.");
+  if (email === "" || password === "") {
+    showBoxMessage("formError", "Please enter your email and password.");
     return;
   }
 
   try {
-    await apiPost("/api/login/", { username: username, password: password });
+    await apiPost("/api/login/", { email: email, password: password });
   } catch (err) {
-    // e.g. "Wrong username or password."
+    // e.g. "Invalid email or password."
     showBoxMessage("formError", err.message);
     return;
   }
