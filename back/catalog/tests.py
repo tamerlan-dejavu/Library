@@ -50,10 +50,15 @@ class CatalogTestData(TestCase):
         BookAuthor.objects.create(book=cls.book2, author=cls.author2)
         BookAuthor.objects.create(book=cls.book3, author=cls.author1)
 
-        cls.user = User.objects.create_user(username="zzqx_reader", password="secret123")
-        cls.member = Member.objects.create(user=cls.user, full_name="zzqx reader", birth_year=2000)
-        cls.other1 = Member.objects.create(full_name="Zzqx Other One", birth_year=1990)
-        cls.other2 = Member.objects.create(full_name="Zzqx Other Two", birth_year=1985)
+        # A member signs in with the e-mail, which is also the Django username
+        cls.user = User.objects.create_user(username="zzqx.reader@example.com",
+                                            email="zzqx.reader@example.com", password="secret123")
+        cls.member = Member.objects.create(user=cls.user, first_name="Алихан", last_name="Бекұлы",
+                                           email="zzqx.reader@example.com", birth_year=2000)
+        cls.other1 = Member.objects.create(first_name="Zzqx", last_name="Other One",
+                                           email="zzqx.other1@example.com", birth_year=1990)
+        cls.other2 = Member.objects.create(first_name="Zzqx", last_name="Other Two",
+                                           email="zzqx.other2@example.com", birth_year=1985)
 
         # book1: two 5-star reviews; book3: one 1-star review
         Review.objects.create(book=cls.book1, member=cls.other1, rating=5, comment="Great")
@@ -67,7 +72,7 @@ class CatalogTestData(TestCase):
         return self.client.post(url, json.dumps(data), content_type="application/json")
 
     def log_in(self):
-        self.client.login(username="zzqx_reader", password="secret123")
+        self.client.login(username="zzqx.reader@example.com", password="secret123")
 
 
 class ApiTests(CatalogTestData):
@@ -100,6 +105,13 @@ class ApiTests(CatalogTestData):
         self.assertEqual(data["authors"], ["Test Author One"])
         self.assertEqual(data["rating"], 5.0)
         self.assertEqual(len(data["reviews"]), 2)
+        # Only first name + first letter of the last name is public
+        self.assertEqual({rev["author"] for rev in data["reviews"]}, {"Zzqx O."})
+
+    def test_review_author_short_name(self):
+        Review.objects.create(book=self.book2, member=self.member, rating=4)
+        r = self.client.get(f"/api/books/{self.book2.book_id}/")
+        self.assertEqual(r.json()["reviews"][0]["author"], "Алихан Б.")
 
     def test_book_detail_not_found(self):
         missing_id = Book.objects.order_by("-book_id").first().book_id + 1000
@@ -108,33 +120,74 @@ class ApiTests(CatalogTestData):
         self.assertEqual(r.json(), {"error": "Book not found"})
 
     # --- POST /api/register/ ---
+    def register_data(self, **changes):
+        data = {"first_name": "Әлия", "last_name": "Нұрғалиева-Smith",
+                "email": "Zzqx.Aliya@Example.com", "birth_year": 2000,
+                "password": "pass1", "password2": "pass1"}
+        data.update(changes)
+        return data
+
     def test_register(self):
-        r = self.post_json("/api/register/", {
-            "username": "zzqx_newbie", "password": "pass1",
-            "confirm_password": "pass1", "birth_year": 2000,
-        })
+        r = self.post_json("/api/register/", self.register_data())
         self.assertEqual(r.status_code, 201)
-        self.assertTrue(Member.objects.filter(user__username="zzqx_newbie").exists())
+        # User and Member are created together; e-mail is stored in lower case
+        user = User.objects.get(username="zzqx.aliya@example.com")
+        self.assertEqual((user.email, user.first_name, user.last_name),
+                         ("zzqx.aliya@example.com", "Әлия", "Нұрғалиева-Smith"))
+        member = Member.objects.get(user=user)
+        self.assertEqual((member.first_name, member.last_name, member.email),
+                         ("Әлия", "Нұрғалиева-Smith", "zzqx.aliya@example.com"))
         # The new user is already logged in
-        self.assertTrue(self.client.get("/api/me/").json()["logged_in"])
+        me = self.client.get("/api/me/").json()
+        self.assertEqual((me["first_name"], me["last_name"], me["email"]),
+                         ("Әлия", "Нұрғалиева-Smith", "zzqx.aliya@example.com"))
+        self.assertNotIn("username", me)
 
     def test_register_too_young(self):
-        r = self.post_json("/api/register/", {
-            "username": "zzqx_kid", "password": "pass1",
-            "confirm_password": "pass1", "birth_year": timezone.localdate().year - 10,
-        })
+        r = self.post_json("/api/register/", self.register_data(birth_year=timezone.localdate().year - 10))
         self.assertEqual(r.status_code, 400)
         self.assertEqual(r.json()["error"], "You must be older than 18.")
 
+    def test_register_bad_names(self):
+        for first_name in ["", " A ", "Ali7", "<b>Ali</b>"]:
+            r = self.post_json("/api/register/", self.register_data(first_name=first_name))
+            self.assertEqual(r.status_code, 400, first_name)
+            self.assertEqual(r.json()["field"], "first_name")
+        r = self.post_json("/api/register/", self.register_data(last_name="   "))
+        self.assertEqual(r.json()["field"], "last_name")
+
+    def test_register_bad_email_and_passwords(self):
+        r = self.post_json("/api/register/", self.register_data(email="not-an-email"))
+        self.assertEqual(r.json()["field"], "email")
+        r = self.post_json("/api/register/", self.register_data(password2="other"))
+        self.assertEqual(r.json()["error"], "Passwords do not match.")
+        r = self.post_json("/api/register/", self.register_data(password="", password2=""))
+        self.assertEqual(r.json()["field"], "password")
+
+    def test_register_email_taken_ignoring_case(self):
+        # The same address as an existing member, in other letter case
+        r = self.post_json("/api/register/", self.register_data(email="ZZQX.Other1@EXAMPLE.com"))
+        self.assertEqual(r.status_code, 400)
+        self.assertEqual(r.json()["error"], "An account with this e-mail already exists.")
+        # ... and as an existing login account
+        User.objects.create_user(username="zzqx.someone@example.com", password="x")
+        r = self.post_json("/api/register/", self.register_data(email="Zzqx.Someone@example.com"))
+        self.assertEqual(r.status_code, 400)
+
     # --- POST /api/login/ ---
-    def test_login(self):
-        r = self.post_json("/api/login/", {"username": "zzqx_reader", "password": "secret123"})
+    def test_login_by_email(self):
+        # Spaces and capital letters in the e-mail do not matter
+        r = self.post_json("/api/login/", {"email": "  ZZQX.Reader@Example.com ", "password": "secret123"})
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json()["username"], "zzqx_reader")
+        self.assertEqual(r.json()["first_name"], "Алихан")
 
     def test_login_wrong_password(self):
-        r = self.post_json("/api/login/", {"username": "zzqx_reader", "password": "nope"})
+        r = self.post_json("/api/login/", {"email": "zzqx.reader@example.com", "password": "nope"})
         self.assertEqual(r.status_code, 401)
+        self.assertEqual(r.json()["error"], "Invalid email or password.")
+        # An unknown e-mail gets exactly the same message
+        r = self.post_json("/api/login/", {"email": "zzqx.nobody@example.com", "password": "nope"})
+        self.assertEqual(r.json()["error"], "Invalid email or password.")
 
     # --- POST /api/logout/ ---
     def test_logout(self):
@@ -155,7 +208,9 @@ class ApiTests(CatalogTestData):
         r = self.client.get("/api/me/")
         self.assertEqual(r.status_code, 200)
         data = r.json()
-        self.assertEqual(data["username"], "zzqx_reader")
+        self.assertEqual((data["first_name"], data["last_name"], data["email"]),
+                         ("Алихан", "Бекұлы", "zzqx.reader@example.com"))
+        self.assertNotIn("username", data)
         self.assertEqual(data["loans"][0]["title"], f"{TAG} Book Two")
         self.assertEqual(data["loans"][0]["book_id"], self.book2.book_id)
         self.assertEqual(data["reviews"][0]["book_id"], self.book3.book_id)
@@ -262,18 +317,33 @@ class ModelRuleTests(CatalogTestData):
 
     def test_member_birth_year_range(self):
         with self.assertRaises(ValidationError) as ctx:
-            Member(full_name="Zzqx Old", birth_year=1850).full_clean()
+            Member(first_name="Zzqx", last_name="Old", email="zzqx.old@example.com",
+                   birth_year=1850).full_clean()
         self.assertIn("birth_year", ctx.exception.message_dict)
+
+    def test_member_email_unique_ignoring_case(self):
+        # Same e-mail as cls.other1, but in capital letters
+        member = Member(first_name="Zzqx", last_name="Copy", email="ZZQX.OTHER1@example.com")
+        with self.assertRaises(ValidationError) as ctx:
+            member.full_clean()
+        self.assertIn("A member with this e-mail already exists.", str(ctx.exception))
 
     # The database CHECKs work even when Django validation is skipped
     def test_database_rejects_bad_phone_and_birth_year(self):
         with self.assertRaises(IntegrityError), transaction.atomic():
             MemberPhone.objects.create(member=self.member, phone="not a phone")
         with self.assertRaises(IntegrityError), transaction.atomic():
-            Member.objects.create(full_name="Zzqx Young", birth_year=2015)
+            Member.objects.create(first_name="Zzqx", last_name="Young",
+                                  email="zzqx.young@example.com", birth_year=2015)
+
+    def test_database_rejects_blank_names_and_case_duplicate_email(self):
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Member.objects.create(first_name="   ", last_name="Blank", email="zzqx.blank@example.com")
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Member.objects.create(first_name="Zzqx", last_name="Copy", email="ZZQX.OTHER1@EXAMPLE.COM")
 
     def test_phones_are_deleted_with_member(self):
-        member = Member.objects.create(full_name="Zzqx Temp")
+        member = Member.objects.create(first_name="Zzqx", last_name="Temp", email="zzqx.temp@example.com")
         MemberPhone.objects.create(member=member, phone="+77019998877")
         member.delete()
         self.assertFalse(MemberPhone.objects.filter(phone="+77019998877").exists())
@@ -331,7 +401,8 @@ class AdminTests(CatalogTestData):
 
     def member_form(self, **changes):
         # The phone inline needs Django's "management form" fields
-        data = {"full_name": "Zzqx Admin Member", "email": "", "birth_year": "1999",
+        data = {"first_name": "Zzqx", "last_name": "Admin Member",
+                "email": "zzqx.admin.member@example.com", "birth_year": "1999",
                 "city": "Алматы", "street": "Абай даңғылы, 1", "user": "",
                 "memberphone_set-TOTAL_FORMS": "1", "memberphone_set-INITIAL_FORMS": "0",
                 "memberphone_set-MIN_NUM_FORMS": "0", "memberphone_set-MAX_NUM_FORMS": "1000",
@@ -362,7 +433,7 @@ class AdminTests(CatalogTestData):
     def test_member_create_update_delete(self):
         r = self.client.post("/admin/catalog/member/add/", self.member_form())
         self.assertEqual(r.status_code, 302)
-        member = Member.objects.get(full_name="Zzqx Admin Member")
+        member = Member.objects.get(email="zzqx.admin.member@example.com")
         self.assertEqual(member.memberphone_set.get().phone, "+77010000001")
         self.assertIsNotNone(member.registered_at)  # filled by DEFAULT now()
 
@@ -415,6 +486,13 @@ class AdminTests(CatalogTestData):
         self.assertEqual(r.status_code, 200)  # not deleted, a page explains why
         self.assertContains(r, "would require deleting the following protected related objects")
         self.assertTrue(Member.objects.filter(pk=self.other2.pk).exists())
+
+    def test_duplicate_email_message(self):
+        # other1's e-mail in capital letters is still a duplicate
+        r = self.client.post("/admin/catalog/member/add/",
+                             self.member_form(email="ZZQX.OTHER1@example.com"))
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "A member with this e-mail already exists.")
 
     def test_admin_title(self):
         r = self.client.get("/admin/")
