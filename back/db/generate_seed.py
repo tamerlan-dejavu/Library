@@ -497,11 +497,12 @@ def build():
         is_female = random.random() < 0.5
         first = random.choice(female if is_female else male)
         last = random.choice(surnames)[1 if is_female else 0]
-        full_name = f"{first} {last}"
-        if full_name in used_names:
+        # first and last name are stored separately; the pair must be unique
+        if (first, last) in used_names:
             continue
-        used_names.add(full_name)
+        used_names.add((first, last))
 
+        # E-mails are lower case, so they are also unique ignoring case
         email = f"{to_ascii(first)}.{to_ascii(last)}{random.randint(1, 99)}@example.com"
         if email in used_emails:
             continue
@@ -514,7 +515,7 @@ def build():
 
         registered = datetime(2024, 1, 1) + timedelta(days=random.randint(0, 364), hours=random.randint(8, 20))
         member_id = len(data["member"]) + 1
-        data["member"].append((member_id, None, full_name, email, random.randint(1960, 2006),
+        data["member"].append((member_id, None, first, last, email, random.randint(1960, 2006),
                                city, street, registered.strftime("%Y-%m-%d %H:%M:%S")))
     member_ids = [m[0] for m in data["member"]]
 
@@ -601,7 +602,8 @@ COLUMNS = {
     "book": ["book_id", "title", "publication_year", "isbn", "category_id", "publisher_id",
              "description", "cover_url", "is_bestseller", "total_copies", "available_copies"],
     "book_author": ["book_author_id", "book_id", "author_id"],
-    "member": ["member_id", "user_id", "full_name", "email", "birth_year", "city", "street", "registered_at"],
+    "member": ["member_id", "user_id", "first_name", "last_name", "email", "birth_year",
+               "city", "street", "registered_at"],
     "member_phone": ["member_phone_id", "member_id", "phone"],
     "loan": ["loan_id", "book_id", "member_id", "librarian_id", "loan_date", "due_date", "return_date"],
     "reservation": ["reservation_id", "book_id", "member_id", "reserved_at", "status"],
