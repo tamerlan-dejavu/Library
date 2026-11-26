@@ -1,5 +1,6 @@
 # JSON API for the frontend. Every view returns a JsonResponse.
 import json
+import re
 from datetime import timedelta
 from functools import wraps
 
@@ -9,12 +10,18 @@ from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.core.validators import validate_email
 from django.db import IntegrityError, transaction
-from django.db.models import Avg, Q
+from django.db.models import Avg, Count, Max, Min, Q
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from .models import Book, BookAuthor, Librarian, Loan, Member, Reservation, Review
+from .models import (
+    Book, BookAuthor, Category, Librarian, Loan, Member, MemberPhone, Reservation, Review,
+)
+
+# Same rule as the CHECK of member_phone.phone in schema.sql
+PHONE_PATTERN = re.compile(r"^\+?[0-9]{10,15}$")
+MAX_PHONES = 5
 
 BOOKS_PER_PAGE = 12
 
@@ -29,12 +36,13 @@ def error(message, status=400, field=None):
     return JsonResponse(data, status=status)
 
 
-def allow(method):
-    # Decorator: answer 405 (as JSON) when the HTTP method is wrong
+def allow(*methods):
+    # Decorator: answer 405 (as JSON) when the HTTP method is wrong,
+    # e.g. @allow("GET") or @allow("GET", "PATCH")
     def decorator(view):
         @wraps(view)
         def wrapper(request, *args, **kwargs):
-            if request.method != method:
+            if request.method not in methods:
                 return error("Method not allowed", 405)
             return view(request, *args, **kwargs)
         return wrapper
@@ -113,7 +121,14 @@ def book_to_dict(book):
         "rating": rating,
         "is_bestseller": book.is_bestseller,
         "available_copies": book.available_copies,
+        "total_copies": book.total_copies,
     }
+
+
+def first_author(book):
+    # Name of the first author of a book (or "" if it has none)
+    link = book.bookauthor_set.first()
+    return link.author.full_name if link else ""
 
 
 def review_author(review):
@@ -132,12 +147,16 @@ def book_list(request):
     books = books_with_rating()
     params = request.GET
 
-    # genre can repeat: ?genre=fantasy&genre=sci-fi -> books of either genre
+    # genre can repeat: ?genre=1&genre=3 -> books of either genre.
+    # A number is a category id, any other text a category name.
     genres = params.getlist("genre")
     if genres:
         genre_filter = Q()
-        for name in genres:
-            genre_filter |= Q(category__name__iexact=name)
+        for value in genres:
+            if value.isdigit():
+                genre_filter |= Q(category_id=int(value))
+            else:
+                genre_filter |= Q(category__name__iexact=value)
         books = books.filter(genre_filter)
 
     # Numbers come as text, so convert them and report bad input
@@ -197,6 +216,19 @@ def book_detail(request, book_id):
         for r in reviews
     ]
     return JsonResponse(data)
+
+
+@allow("GET")
+def filters(request):
+    # Data for the catalog filters and the Home categories:
+    # every genre with its number of books, and the range of years
+    genres = Category.objects.annotate(count=Count("book")).order_by("name")
+    years = Book.objects.aggregate(year_min=Min("publication_year"), year_max=Max("publication_year"))
+    return JsonResponse({
+        "genres": [{"id": g.category_id, "name": g.name, "count": g.count} for g in genres],
+        "year_min": years["year_min"],
+        "year_max": years["year_max"],
+    })
 
 
 # ---------- accounts ----------
@@ -288,35 +320,114 @@ def logout_view(request):
 # ensure_csrf_cookie: always send the csrftoken cookie, so the frontend
 # can put it into the X-CSRFToken header of its POST requests
 @ensure_csrf_cookie
-@allow("GET")
+@allow("GET", "PATCH")
 def me(request):
     if not request.user.is_authenticated:
+        if request.method == "PATCH":
+            return error("Login required", 401)
         return JsonResponse({"logged_in": False})
 
     member = get_member(request.user)
-    loans = Loan.objects.filter(member=member).select_related("book").order_by("-loan_date")
-    reviews = Review.objects.filter(member=member).select_related("book").order_by("-created_at")
+    if request.method == "PATCH":
+        return update_profile(request, member)
+    return JsonResponse(profile_data(member))
 
-    return JsonResponse({
+
+def profile_data(member):
+    # Everything the profile page shows about the logged-in member
+    with_authors = ("book__bookauthor_set__author",)
+    loans = Loan.objects.filter(member=member).select_related("book") \
+        .prefetch_related(*with_authors).order_by("-loan_date")
+    reservations = Reservation.objects.filter(member=member, status="pending") \
+        .select_related("book").prefetch_related(*with_authors).order_by("-reserved_at")
+    reviews = Review.objects.filter(member=member).select_related("book") \
+        .prefetch_related(*with_authors).order_by("-created_at")
+    # The member's own rating of each book, shown next to the loan
+    my_ratings = {r.book_id: r.rating for r in reviews}
+
+    return {
         "logged_in": True,
         "first_name": member.first_name,
         "last_name": member.last_name,
         "email": member.email,
+        "birth_year": member.birth_year,
+        "phones": [p.phone for p in member.memberphone_set.order_by("member_phone_id")],
         "loans": [
             {
                 "book_id": loan.book_id,
                 "title": loan.book.title,
+                "author": first_author(loan.book),
                 "loan_date": loan.loan_date,
                 "due_date": loan.due_date,
                 "return_date": loan.return_date,
+                "rating": my_ratings.get(loan.book_id),
             }
             for loan in loans
         ],
+        "reservations": [
+            {
+                "book_id": res.book_id,
+                "title": res.book.title,
+                "author": first_author(res.book),
+                "reserved_at": res.reserved_at,
+                "rating": my_ratings.get(res.book_id),
+            }
+            for res in reservations
+        ],
         "reviews": [
-            {"book_id": r.book_id, "book_title": r.book.title, "rating": r.rating, "comment": r.comment}
+            {
+                "book_id": r.book_id,
+                "book_title": r.book.title,
+                "author": first_author(r.book),
+                "rating": r.rating,
+                "comment": r.comment,
+                "created_at": r.created_at,
+            }
             for r in reviews
         ],
-    })
+    }
+
+
+def update_profile(request, member):
+    # PATCH /api/me/ with {"first_name", "last_name", "phones": [...]}.
+    # E-mail and birth year cannot be changed here.
+    data = read_json(request)
+    if data is None:
+        return error("Invalid JSON")
+
+    first_name = str(data.get("first_name", "")).strip()
+    last_name = str(data.get("last_name", "")).strip()
+    phones = data.get("phones", [])
+
+    if not is_valid_name(first_name):
+        return error("First name: at least 2 letters (spaces, - and ' are allowed).", field="first_name")
+    if not is_valid_name(last_name):
+        return error("Last name: at least 2 letters (spaces, - and ' are allowed).", field="last_name")
+    if not isinstance(phones, list):
+        return error("Phones must be a list.", field="phones")
+    # Empty rows from the form are ignored; spaces inside a number too
+    phones = [str(p).replace(" ", "").strip() for p in phones if str(p).strip()]
+    if len(phones) > MAX_PHONES:
+        return error(f"At most {MAX_PHONES} phone numbers.", field="phones")
+    for phone in phones:
+        if not PHONE_PATTERN.match(phone):
+            return error(f"{phone}: use + and 10-15 digits, e.g. +77011234567.", field="phones")
+    if len(set(phones)) != len(phones):
+        return error("The same phone number is entered twice.", field="phones")
+
+    # Names in both tables and the whole set of phones change together
+    with transaction.atomic():
+        member.first_name = first_name
+        member.last_name = last_name
+        member.save(update_fields=["first_name", "last_name"])
+        user = request.user
+        user.first_name = first_name
+        user.last_name = last_name
+        user.save(update_fields=["first_name", "last_name"])
+        MemberPhone.objects.filter(member=member).delete()
+        MemberPhone.objects.bulk_create([MemberPhone(member=member, phone=p) for p in phones])
+
+    return JsonResponse(profile_data(member))
 
 
 # ---------- actions on a book ----------
