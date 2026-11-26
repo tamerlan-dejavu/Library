@@ -18,7 +18,7 @@ load_dotenv()
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 
-def format_table(columns, rows, max_width=60):
+def format_table(columns, rows, max_width=100):
     # Rows as a plain text table, e.g.
     #   title | year
     #   ------+-----

@@ -39,18 +39,26 @@ $$;
 --             (same idea as query S2: EXISTS with a correlated subquery).
 --             A loan is overdue when it is not returned and due_date < as_of.
 -- Parameters: as_of - the day to check (default: today)
--- Returns:    member_id, full_name, overdue_loans, max_days_overdue
+-- Returns:    member_id, first_name, last_name, email, overdue_loans,
+--             max_days_overdue
 -- Example:    SELECT * FROM fn_members_with_overdue_loans();
 --             SELECT * FROM fn_members_with_overdue_loans(current_date + 7);
 -- ----------------------------------------------------------------------
+-- The returned columns changed (full_name -> first_name, last_name, email),
+-- and CREATE OR REPLACE cannot change them, so drop the old version first
+DROP FUNCTION IF EXISTS fn_members_with_overdue_loans(DATE);
+
 CREATE OR REPLACE FUNCTION fn_members_with_overdue_loans(as_of DATE DEFAULT current_date)
-RETURNS TABLE (member_id INT, full_name TEXT, overdue_loans BIGINT, max_days_overdue INT)
+RETURNS TABLE (member_id INT, first_name TEXT, last_name TEXT, email TEXT,
+               overdue_loans BIGINT, max_days_overdue INT)
 LANGUAGE plpgsql
 AS $$
 BEGIN
     RETURN QUERY
     SELECT m.member_id,
-           m.full_name,
+           m.first_name,
+           m.last_name,
+           m.email,
            -- correlated subqueries: they use m.member_id of the current row
            (SELECT COUNT(*) FROM loan l
              WHERE l.member_id = m.member_id
@@ -63,7 +71,8 @@ BEGIN
     WHERE EXISTS (SELECT 1 FROM loan l
                    WHERE l.member_id = m.member_id
                      AND l.return_date IS NULL AND l.due_date < as_of)
-    ORDER BY 4 DESC, 2;
+    -- most days overdue first, then by last name and first name
+    ORDER BY 6 DESC, 3, 2;
 END;
 $$;
 
