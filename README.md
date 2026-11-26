@@ -7,6 +7,12 @@ tables, stored functions, a separate application role). The frontend is
 static HTML + Bootstrap + vanilla JS. The book page also shows data from the
 public Open Library API.
 
+Readers register with first name, last name, e-mail and password and sign in
+with their e-mail. The e-mail (in lower case) is also the hidden Django
+username, so no separate username is ever shown or typed. E-mails are unique
+without letter case (a unique index on `lower(email)` in `member`). Reviews
+show only the first name and the first letter of the last name ("Алихан Б.").
+
 Design: [Figma](https://www.figma.com/design/pCMCj7ck0AuD1ufCNWxMaF/First_lab?node-id=0-1&t=HzCb5ytFDVQlfYwq-1)
 
 ## Technologies
@@ -119,7 +125,7 @@ python db/run_sql.py db/call_functions.sql --out ../docs/sql_results/functions.t
 | `seed.sql`           | Demo data: 143 real books, 134 authors, 125 members, 180 loans, ...   |
 | `procedures.sql`     | Three PL/pgSQL functions (above-average books, overdue members, unborrowed books) |
 | `security.sql`       | Role `library_app`, grants, row level security policies              |
-| `structure.sql`      | Report: columns, constraints and row counts of the 11 tables          |
+| `structure.sql`      | Report: columns, constraints, row counts and indexes of the 11 tables |
 | `queries.sql`        | Demonstration queries: joins, aggregates, subqueries                  |
 | `call_functions.sql` | Calls each stored function once                                       |
 | `run_sql.py`         | Runs a .sql file; `--out` saves the results as text tables            |
