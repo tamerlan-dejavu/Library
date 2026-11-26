@@ -39,7 +39,7 @@ function renderReviews(reviews) {
     const head = document.createElement("p");
     head.className = "mb-1";
     const name = document.createElement("strong");
-    name.textContent = r.username || "Reader";
+    name.textContent = r.author || "Reader";
     head.appendChild(name);
 
     const meta = document.createElement("span");

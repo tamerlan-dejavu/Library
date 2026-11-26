@@ -89,7 +89,8 @@ async function loadProfile() {
     return;
   }
 
-  document.getElementById("profileName").textContent = me.username;
+  document.getElementById("profileName").textContent = me.first_name + " " + me.last_name;
+  document.getElementById("profileEmail").textContent = me.email;
   renderLoans(me.loans);
   renderReviews(me.reviews);
   document.getElementById("signedIn").classList.remove("d-none");

@@ -39,8 +39,9 @@ loan         | due_date         | date                        | NO          | NU
 loan         | return_date      | date                        | YES         | NULL
 member       | member_id        | integer                     | NO          | NULL
 member       | user_id          | bigint                      | YES         | NULL
-member       | full_name        | text                        | NO          | NULL
-member       | email            | text                        | YES         | NULL
+member       | first_name       | text                        | NO          | NULL
+member       | last_name        | text                        | NO          | NULL
+member       | email            | text                        | NO          | NULL
 member       | birth_year       | integer                     | YES         | NULL
 member       | city             | text                        | YES         | NULL
 member       | street           | text                        | YES         | NULL
@@ -62,13 +63,13 @@ review       | member_id        | integer                     | YES         | NU
 review       | rating           | integer                     | NO          | NULL
 review       | comment          | text                        | YES         | NULL
 review       | created_at       | timestamp without time zone | YES         | now()
-(55 rows)
+(56 rows)
 
 --     they are already visible in (a), so we hide them here.
 table_name   | constraint_type | constraint_name                   | columns            | references_table | check_clause
--------------+-----------------+-----------------------------------+--------------------+------------------+-------------------------------------------------------------
+-------------+-----------------+-----------------------------------+--------------------+------------------+------------------------------------------------------------------------------
 author       | PRIMARY KEY     | author_pkey                       | author_id          | NULL             | NULL
-book         | CHECK           | book_check                        | NULL               | NULL             | ((available_copies >= 0) AND (available_copies <= total_c...
+book         | CHECK           | book_check                        | NULL               | NULL             | ((available_copies >= 0) AND (available_copies <= total_copies))
 book         | CHECK           | book_total_copies_check           | NULL               | NULL             | (total_copies >= 0)
 book         | FOREIGN KEY     | book_category_id_fkey             | category_id        | category         | NULL
 book         | FOREIGN KEY     | book_publisher_id_fkey            | publisher_id       | publisher        | NULL
@@ -88,9 +89,10 @@ loan         | FOREIGN KEY     | loan_librarian_id_fkey            | librarian_i
 loan         | FOREIGN KEY     | loan_member_id_fkey               | member_id          | member           | NULL
 loan         | PRIMARY KEY     | loan_pkey                         | loan_id            | NULL             | NULL
 member       | CHECK           | member_birth_year_check           | NULL               | NULL             | ((birth_year >= 1900) AND (birth_year <= 2008))
+member       | CHECK           | member_first_name_check           | NULL               | NULL             | (btrim(first_name) <> ''::text)
+member       | CHECK           | member_last_name_check            | NULL               | NULL             | (btrim(last_name) <> ''::text)
 member       | FOREIGN KEY     | member_user_id_fkey               | user_id            | auth_user        | NULL
 member       | PRIMARY KEY     | member_pkey                       | member_id          | NULL             | NULL
-member       | UNIQUE          | member_email_key                  | email              | NULL             | NULL
 member       | UNIQUE          | member_user_id_key                | user_id            | NULL             | NULL
 member_phone | CHECK           | member_phone_phone_check          | NULL               | NULL             | (phone ~ '^\+?[0-9]{10,15}$'::text)
 member_phone | FOREIGN KEY     | member_phone_member_id_fkey       | member_id          | member           | NULL
@@ -98,7 +100,7 @@ member_phone | PRIMARY KEY     | member_phone_pkey                 | member_phon
 member_phone | UNIQUE          | member_phone_member_id_phone_key  | member_id, phone   | NULL             | NULL
 publisher    | PRIMARY KEY     | publisher_pkey                    | publisher_id       | NULL             | NULL
 publisher    | UNIQUE          | publisher_name_key                | name               | NULL             | NULL
-reservation  | CHECK           | reservation_status_check          | NULL               | NULL             | (status = ANY (ARRAY['pending'::text, 'fulfilled'::text, ...
+reservation  | CHECK           | reservation_status_check          | NULL               | NULL             | (status = ANY (ARRAY['pending'::text, 'fulfilled'::text, 'cancelled'::text]))
 reservation  | FOREIGN KEY     | reservation_book_id_fkey          | book_id            | book             | NULL
 reservation  | FOREIGN KEY     | reservation_member_id_fkey        | member_id          | member           | NULL
 reservation  | PRIMARY KEY     | reservation_pkey                  | reservation_id     | NULL             | NULL
@@ -107,7 +109,7 @@ review       | FOREIGN KEY     | review_book_id_fkey               | book_id    
 review       | FOREIGN KEY     | review_member_id_fkey             | member_id          | member           | NULL
 review       | PRIMARY KEY     | review_pkey                       | review_id          | NULL             | NULL
 review       | UNIQUE          | review_book_id_member_id_key      | book_id, member_id | NULL             | NULL
-(40 rows)
+(41 rows)
 
 -- (c) Number of rows in each project table, in one result.
 --     UNION ALL glues the 11 one-row results together.
@@ -125,3 +127,34 @@ loan         | 180
 reservation  | 110
 review       | 170
 (11 rows)
+
+-- (d) Indexes. information_schema does not list indexes, so we read the
+--     PostgreSQL view pg_indexes. It shows, for example, the unique index on
+--     lower(member.email) that makes e-mails unique without letter case.
+table_name   | index_name                        | definition
+-------------+-----------------------------------+-----------------------------------------------------------------------------------------------------
+author       | author_pkey                       | CREATE UNIQUE INDEX author_pkey ON public.author USING btree (author_id)
+book         | book_isbn_key                     | CREATE UNIQUE INDEX book_isbn_key ON public.book USING btree (isbn)
+book         | book_pkey                         | CREATE UNIQUE INDEX book_pkey ON public.book USING btree (book_id)
+book         | idx_book_category                 | CREATE INDEX idx_book_category ON public.book USING btree (category_id)
+book         | idx_book_title                    | CREATE INDEX idx_book_title ON public.book USING btree (title)
+book_author  | book_author_book_id_author_id_key | CREATE UNIQUE INDEX book_author_book_id_author_id_key ON public.book_author USING btree (book_id,...
+book_author  | book_author_pkey                  | CREATE UNIQUE INDEX book_author_pkey ON public.book_author USING btree (book_author_id)
+category     | category_name_key                 | CREATE UNIQUE INDEX category_name_key ON public.category USING btree (name)
+category     | category_pkey                     | CREATE UNIQUE INDEX category_pkey ON public.category USING btree (category_id)
+librarian    | librarian_email_key               | CREATE UNIQUE INDEX librarian_email_key ON public.librarian USING btree (email)
+librarian    | librarian_pkey                    | CREATE UNIQUE INDEX librarian_pkey ON public.librarian USING btree (librarian_id)
+loan         | idx_loan_member                   | CREATE INDEX idx_loan_member ON public.loan USING btree (member_id)
+loan         | loan_pkey                         | CREATE UNIQUE INDEX loan_pkey ON public.loan USING btree (loan_id)
+member       | member_email_lower_key            | CREATE UNIQUE INDEX member_email_lower_key ON public.member USING btree (lower(email))
+member       | member_pkey                       | CREATE UNIQUE INDEX member_pkey ON public.member USING btree (member_id)
+member       | member_user_id_key                | CREATE UNIQUE INDEX member_user_id_key ON public.member USING btree (user_id)
+member_phone | member_phone_member_id_phone_key  | CREATE UNIQUE INDEX member_phone_member_id_phone_key ON public.member_phone USING btree (member_i...
+member_phone | member_phone_pkey                 | CREATE UNIQUE INDEX member_phone_pkey ON public.member_phone USING btree (member_phone_id)
+publisher    | publisher_name_key                | CREATE UNIQUE INDEX publisher_name_key ON public.publisher USING btree (name)
+publisher    | publisher_pkey                    | CREATE UNIQUE INDEX publisher_pkey ON public.publisher USING btree (publisher_id)
+reservation  | reservation_pkey                  | CREATE UNIQUE INDEX reservation_pkey ON public.reservation USING btree (reservation_id)
+review       | idx_review_book                   | CREATE INDEX idx_review_book ON public.review USING btree (book_id)
+review       | review_book_id_member_id_key      | CREATE UNIQUE INDEX review_book_id_member_id_key ON public.review USING btree (book_id, member_id)
+review       | review_pkey                       | CREATE UNIQUE INDEX review_pkey ON public.review USING btree (review_id)
+(24 rows)

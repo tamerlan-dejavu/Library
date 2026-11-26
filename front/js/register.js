@@ -1,6 +1,16 @@
 // Registration form: client-side checks first, then POST /api/register/
 
-const fieldIds = ["username", "password", "confirmPassword", "birthYear"];
+const fieldIds = ["firstName", "lastName", "email", "birthYear", "password", "password2"];
+
+// Server field name -> id of the input on this page
+const serverFields = {
+  first_name: "firstName",
+  last_name: "lastName",
+  email: "email",
+  birth_year: "birthYear",
+  password: "password",
+  password2: "password2"
+};
 
 // Marks a field as invalid and writes the message under it
 function showError(id, message) {
@@ -17,28 +27,41 @@ function clearErrors() {
   hideBoxMessage("formError");
 }
 
+// Name rule (same as the server): at least 2 characters, letters of any
+// alphabet, and also space, hyphen and apostrophe. \p{L} = any letter.
+function isValidName(name) {
+  return name.length >= 2 && /^[\p{L} '’-]+$/u.test(name) && /\p{L}/u.test(name);
+}
+
+// Simple e-mail check: something@something.something, no spaces
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 // Checks the form and, if everything is fine, creates the account
 async function registerUser() {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value;
-  const confirmPassword = document.getElementById("confirmPassword").value;
+  const firstName = document.getElementById("firstName").value.trim();
+  const lastName = document.getElementById("lastName").value.trim();
+  const email = document.getElementById("email").value.trim().toLowerCase();
   const birthYear = parseInt(document.getElementById("birthYear").value);
+  const password = document.getElementById("password").value;
+  const password2 = document.getElementById("password2").value;
 
   clearErrors();
   let isValid = true;
 
-  if (username.length < 2) {
-    showError("username", "Username must have at least 2 characters.");
+  if (!isValidName(firstName)) {
+    showError("firstName", "At least 2 letters (spaces, - and ' are allowed).");
     isValid = false;
   }
 
-  if (password === "") {
-    showError("password", "Please enter a password.");
+  if (!isValidName(lastName)) {
+    showError("lastName", "At least 2 letters (spaces, - and ' are allowed).");
     isValid = false;
   }
 
-  if (password !== confirmPassword) {
-    showError("confirmPassword", "Passwords do not match.");
+  if (!isValidEmail(email)) {
+    showError("email", "Please enter a valid email address.");
     isValid = false;
   }
 
@@ -56,20 +79,37 @@ async function registerUser() {
     isValid = false;
   }
 
+  if (password === "") {
+    showError("password", "Please enter a password.");
+    isValid = false;
+  }
+
+  if (password !== password2) {
+    showError("password2", "Passwords do not match.");
+    isValid = false;
+  }
+
   if (!isValid) {
     return;
   }
 
-  // The server checks the same rules again (and that the name is free)
+  // The server checks the same rules again (and that the email is free)
   try {
     await apiPost("/api/register/", {
-      username: username,
+      first_name: firstName,
+      last_name: lastName,
+      email: email,
+      birth_year: birthYear,
       password: password,
-      confirm_password: confirmPassword,
-      birth_year: birthYear
+      password2: password2
     });
   } catch (err) {
-    showBoxMessage("formError", err.message);
+    // Show the message under the field it belongs to, if we know it
+    if (err.field && serverFields[err.field]) {
+      showError(serverFields[err.field], err.message);
+    } else {
+      showBoxMessage("formError", err.message);
+    }
     return;
   }
 

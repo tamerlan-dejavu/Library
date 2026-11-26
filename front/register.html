@@ -44,10 +44,29 @@
     <h1 class="mb-4">Create account</h1>
 
     <form id="registerForm" novalidate onsubmit="registerUser(); return false;">
+      <div class="row">
+        <div class="col-sm-6 mb-3">
+          <label for="firstName" class="form-label">First name</label>
+          <input type="text" id="firstName" class="form-control" autocomplete="given-name">
+          <div id="firstNameError" class="invalid-feedback"></div>
+        </div>
+        <div class="col-sm-6 mb-3">
+          <label for="lastName" class="form-label">Last name</label>
+          <input type="text" id="lastName" class="form-control" autocomplete="family-name">
+          <div id="lastNameError" class="invalid-feedback"></div>
+        </div>
+      </div>
+
       <div class="mb-3">
-        <label for="username" class="form-label">Username</label>
-        <input type="text" id="username" class="form-control" placeholder="At least 2 characters" autocomplete="username">
-        <div id="usernameError" class="invalid-feedback"></div>
+        <label for="email" class="form-label">Email</label>
+        <input type="email" id="email" class="form-control" placeholder="name@example.com" autocomplete="email">
+        <div id="emailError" class="invalid-feedback"></div>
+      </div>
+
+      <div class="mb-3">
+        <label for="birthYear" class="form-label">Birth year</label>
+        <input type="number" id="birthYear" class="form-control" placeholder="For example, 2000">
+        <div id="birthYearError" class="invalid-feedback"></div>
       </div>
 
       <div class="mb-3">
@@ -56,16 +75,10 @@
         <div id="passwordError" class="invalid-feedback"></div>
       </div>
 
-      <div class="mb-3">
-        <label for="confirmPassword" class="form-label">Confirm password</label>
-        <input type="password" id="confirmPassword" class="form-control" autocomplete="new-password">
-        <div id="confirmPasswordError" class="invalid-feedback"></div>
-      </div>
-
       <div class="mb-4">
-        <label for="birthYear" class="form-label">Birth year</label>
-        <input type="number" id="birthYear" class="form-control" placeholder="For example, 2000">
-        <div id="birthYearError" class="invalid-feedback"></div>
+        <label for="password2" class="form-label">Repeat password</label>
+        <input type="password" id="password2" class="form-control" autocomplete="new-password">
+        <div id="password2Error" class="invalid-feedback"></div>
       </div>
 
       <div id="formError" class="alert alert-primary d-none" role="alert"></div>

@@ -19,7 +19,7 @@
 --     A book with two authors gives two rows (one per author).
 SELECT l.loan_id,
        l.loan_date,
-       m.full_name   AS member,
+       m.first_name || ' ' || m.last_name AS member,
        b.title,
        a.full_name   AS author,
        c.name        AS genre,
@@ -42,7 +42,8 @@ LIMIT 15;
 --     COUNT(DISTINCT ...) removes the duplicates caused by joining
 --     three 1:N tables at once.
 SELECT m.member_id,
-       m.full_name,
+       m.first_name,
+       m.last_name,
        string_agg(DISTINCT mp.phone, ', ')   AS phones,
        COUNT(DISTINCT r.review_id)           AS reviews,
        COUNT(DISTINCT res.reservation_id)    AS reservations
@@ -50,14 +51,14 @@ FROM member m
 LEFT JOIN member_phone mp ON mp.member_id = m.member_id
 LEFT JOIN review r        ON r.member_id = m.member_id
 LEFT JOIN reservation res ON res.member_id = m.member_id
-GROUP BY m.member_id, m.full_name
+GROUP BY m.member_id, m.first_name, m.last_name
 ORDER BY reviews DESC, reservations DESC, m.member_id
 LIMIT 15;
 
 -- J3. Members who never borrowed a book (RIGHT JOIN).
 --     RIGHT JOIN keeps every member (the right table); members without
 --     a matching loan get NULL in l.loan_id, and we keep only those.
-SELECT m.member_id, m.full_name, m.city
+SELECT m.member_id, m.first_name, m.last_name, m.city
 FROM loan l
 RIGHT JOIN member m ON m.member_id = l.member_id
 WHERE l.loan_id IS NULL
@@ -84,14 +85,14 @@ ORDER BY loans DESC;
 -- A2. Most active members: at least 3 loans (HAVING filters groups,
 --     WHERE would filter single rows). Reviews counted by a subquery
 --     so that the two counts do not multiply each other.
-SELECT m.full_name,
+SELECT m.first_name || ' ' || m.last_name AS member,
        COUNT(l.loan_id) AS loans,
        (SELECT COUNT(*) FROM review r WHERE r.member_id = m.member_id) AS reviews,
        MIN(l.loan_date) AS first_loan,
        MAX(l.loan_date) AS last_loan
 FROM member m
 JOIN loan l ON l.member_id = m.member_id
-GROUP BY m.member_id, m.full_name
+GROUP BY m.member_id, m.first_name, m.last_name
 HAVING COUNT(l.loan_id) >= 3
 ORDER BY loans DESC, reviews DESC;
 
@@ -126,14 +127,14 @@ LIMIT 15;
 
 -- S2. EXISTS with a correlated subquery: members who have an overdue loan.
 --     The inner query uses m.member_id, so it runs for every member.
-SELECT m.member_id, m.full_name, m.email
+SELECT m.member_id, m.first_name, m.last_name, m.email
 FROM member m
 WHERE EXISTS (SELECT 1
               FROM loan l
               WHERE l.member_id = m.member_id
                 AND l.return_date IS NULL
                 AND l.due_date < current_date)
-ORDER BY m.full_name;
+ORDER BY m.last_name, m.first_name;
 
 -- S3. NOT EXISTS: books that were never borrowed.
 --     (NOT IN would also work here because loan.book_id has no NULLs.)

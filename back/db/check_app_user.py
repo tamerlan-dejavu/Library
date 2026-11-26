@@ -23,7 +23,8 @@ TABLES = {
     "book_author": ("INSERT INTO book_author (book_id, author_id) VALUES "
                     "((SELECT min(book_id) FROM book), (SELECT max(author_id) FROM author))",
                     "author_id", "book_author_id"),
-    "member": ("INSERT INTO member (full_name) VALUES ('zz check')", "city", "member_id"),
+    "member": ("INSERT INTO member (first_name, last_name, email) "
+               "VALUES ('zz', 'check', 'zz.check@example.com')", "city", "member_id"),
     "member_phone": ("INSERT INTO member_phone (member_id, phone) VALUES "
                      "((SELECT max(member_id) FROM member), '+77000000000')", "phone", "member_phone_id"),
     "librarian": ("INSERT INTO librarian (full_name) VALUES ('zz check')", "full_name", "librarian_id"),

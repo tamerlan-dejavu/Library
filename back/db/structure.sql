@@ -61,3 +61,16 @@ UNION ALL SELECT 'librarian', count(*) FROM librarian
 UNION ALL SELECT 'loan', count(*) FROM loan
 UNION ALL SELECT 'reservation', count(*) FROM reservation
 UNION ALL SELECT 'review', count(*) FROM review;
+
+-- (d) Indexes. information_schema does not list indexes, so we read the
+--     PostgreSQL view pg_indexes. It shows, for example, the unique index on
+--     lower(member.email) that makes e-mails unique without letter case.
+SELECT tablename AS table_name,
+       indexname AS index_name,
+       indexdef  AS definition
+FROM pg_indexes
+WHERE schemaname = 'public'
+  AND tablename IN ('category', 'publisher', 'author', 'book', 'book_author',
+                    'member', 'member_phone', 'librarian', 'loan',
+                    'reservation', 'review')
+ORDER BY tablename, indexname;

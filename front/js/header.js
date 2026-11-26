@@ -27,7 +27,7 @@ async function loadHeader() {
   box.textContent = "";
 
   if (me.logged_in) {
-    box.appendChild(makeLink("Hi, " + me.username, "profile.html"));
+    box.appendChild(makeLink("Hi, " + me.first_name, "profile.html"));
 
     const button = document.createElement("button");
     button.type = "button";

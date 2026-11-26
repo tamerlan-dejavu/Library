@@ -9,51 +9,51 @@ book_id | title                                   | avg_rating | review_count
 53      | 2001: A Space Odyssey                   | 5.00       | 2
 83      | Northern Lights                         | 4.67       | 3
 68      | Трудно быть богом                       | 4.50       | 4
+62      | Solaris                                 | 4.50       | 2
 92      | The Hound of the Baskervilles           | 4.50       | 2
 129     | Becoming                                | 4.50       | 2
-134     | Educated                                | 4.50       | 2
-62      | Solaris                                 | 4.50       | 2
-126     | Аз и Я                                  | 4.50       | 2
 32      | Преступление и наказание                | 4.50       | 2
+126     | Аз и Я                                  | 4.50       | 2
+134     | Educated                                | 4.50       | 2
 78      | American Gods                           | 4.33       | 3
 58      | Frankenstein                            | 4.00       | 4
-5       | Pride and Prejudice                     | 4.00       | 3
-36      | Мёртвые души                            | 4.00       | 3
 76      | A Wizard of Earthsea                    | 4.00       | 3
-118     | A Short History of Nearly Everything    | 4.00       | 2
+36      | Мёртвые души                            | 4.00       | 3
+5       | Pride and Prejudice                     | 4.00       | 3
 35      | Евгений Онегин                          | 4.00       | 2
-107     | Азазель                                 | 4.00       | 2
 91      | And Then There Were None                | 4.00       | 2
-132     | The Autobiography of Malcolm X          | 4.00       | 2
 43      | Көшпенділер                             | 4.00       | 2
+118     | A Short History of Nearly Everything    | 4.00       | 2
+132     | The Autobiography of Malcolm X          | 4.00       | 2
 123     | How to Win Friends and Influence People | 4.00       | 2
+107     | Азазель                                 | 4.00       | 2
 (22 rows)
 
 -- Members with overdue loans today
-member_id | full_name           | overdue_loans | max_days_overdue
-----------+---------------------+---------------+-----------------
-98        | Мөлдір Ахметқызы    | 1             | 285
-39        | Oliver Walker       | 1             | 284
-81        | Никита Соколов      | 1             | 259
-89        | Татьяна Соколова    | 1             | 250
-103       | Гүлнұр Жұмабекова   | 1             | 231
-58        | Сәуле Әбдірахманова | 1             | 198
-59        | Ольга Попова        | 1             | 173
-113       | Үміт Қасымова       | 1             | 150
-12        | Michael Walker      | 1             | 134
-94        | Екатерина Лебедева  | 1             | 131
-96        | Әлішер Қасымов      | 1             | 130
-68        | Arman Kim           | 1             | 120
-123       | Ерғали Нұрғалиев    | 1             | 114
-77        | Дана Сәрсенбаева    | 1             | 106
-73        | Дмитрий Лебедев     | 1             | 97
-3         | Alikhan Bekov       | 2             | 79
-111       | Айгерім Бекқызы     | 1             | 73
-57        | James Wilson        | 1             | 41
-104       | Daniel Brown        | 1             | 35
-115       | Olivia Smith        | 1             | 27
-9         | Sarah Johnson       | 1             | 10
-121       | Наталья Смирнова    | 1             | 9
+member_id | first_name | last_name     | email                              | overdue_loans | max_days_overdue
+----------+------------+---------------+------------------------------------+---------------+-----------------
+98        | Мөлдір     | Ахметқызы     | moldir.akhmetqyzy20@example.com    | 1             | 285
+39        | Oliver     | Walker        | oliver.walker26@example.com        | 1             | 284
+81        | Никита     | Соколов       | nikita.sokolov59@example.com       | 1             | 259
+89        | Татьяна    | Соколова      | tatyana.sokolova93@example.com     | 1             | 250
+103       | Гүлнұр     | Жұмабекова    | gulnur.zhumabekova87@example.com   | 1             | 231
+58        | Сәуле      | Әбдірахманова | saule.abdirakhmanova73@example.com | 1             | 198
+59        | Ольга      | Попова        | olga.popova60@example.com          | 1             | 173
+113       | Үміт       | Қасымова      | umit.qasymova7@example.com         | 1             | 150
+12        | Michael    | Walker        | michael.walker67@example.com       | 1             | 134
+94        | Екатерина  | Лебедева      | ekaterina.lebedeva74@example.com   | 1             | 131
+96        | Әлішер     | Қасымов       | alisher.qasymov51@example.com      | 1             | 130
+68        | Arman      | Kim           | arman.kim47@example.com            | 1             | 120
+123       | Ерғали     | Нұрғалиев     | ergali.nurgaliev4@example.com      | 1             | 114
+77        | Дана       | Сәрсенбаева   | dana.sarsenbaeva17@example.com     | 1             | 106
+73        | Дмитрий    | Лебедев       | dmitriy.lebedev28@example.com      | 1             | 97
+3         | Alikhan    | Bekov         | alikhan.bekov56@example.com        | 2             | 79
+111       | Айгерім    | Бекқызы       | aygerim.bekqyzy43@example.com      | 1             | 73
+57        | James      | Wilson        | james.wilson22@example.com         | 1             | 41
+104       | Daniel     | Brown         | daniel.brown11@example.com         | 1             | 35
+115       | Olivia     | Smith         | olivia.smith68@example.com         | 1             | 27
+9         | Sarah      | Johnson       | sarah.johnson84@example.com        | 1             | 10
+121       | Наталья    | Смирнова      | natalya.smirnova94@example.com     | 1             | 9
 (22 rows)
 
 -- Fantasy books nobody has borrowed yet

@@ -68,10 +68,15 @@ class MemberPhoneInline(admin.TabularInline):
 
 @admin.register(Member)
 class MemberAdmin(admin.ModelAdmin):
-    list_display = ("member_id", "full_name", "email", "birth_year", "city", "user", "registered_at")
-    search_fields = ("full_name", "email", "city", "memberphone__phone")
+    list_display = ("member_id", "first_name", "last_name", "email", "birth_year",
+                    "city", "user", "registered_at")
+    search_fields = ("first_name", "last_name", "email", "city", "memberphone__phone")
     list_filter = ("city", "birth_year")
+    ordering = ("last_name", "first_name")
     inlines = [MemberPhoneInline]
+    # Order of the fields in the form
+    fields = ("first_name", "last_name", "email", "birth_year", "city", "street",
+              "user", "registered_at")
     # Filled by the database (DEFAULT now()), so not editable in the form
     readonly_fields = ("registered_at",)
 
@@ -79,7 +84,7 @@ class MemberAdmin(admin.ModelAdmin):
 @admin.register(MemberPhone)
 class MemberPhoneAdmin(admin.ModelAdmin):
     list_display = ("member_phone_id", "member", "phone")
-    search_fields = ("phone", "member__full_name")
+    search_fields = ("phone", "member__first_name", "member__last_name")
     list_filter = ("member__city",)
 
 
@@ -94,7 +99,7 @@ class LibrarianAdmin(admin.ModelAdmin):
 class LoanAdmin(admin.ModelAdmin):
     list_display = ("loan_id", "book", "member", "librarian",
                     "loan_date", "due_date", "return_date", "status")
-    search_fields = ("book__title", "member__full_name")
+    search_fields = ("book__title", "member__first_name", "member__last_name")
     list_filter = ("librarian", "loan_date", "due_date", "return_date")
     list_select_related = ("book", "member", "librarian")
 
@@ -111,7 +116,7 @@ class LoanAdmin(admin.ModelAdmin):
 @admin.register(Reservation)
 class ReservationAdmin(admin.ModelAdmin):
     list_display = ("reservation_id", "book", "member", "status", "reserved_at")
-    search_fields = ("book__title", "member__full_name")
+    search_fields = ("book__title", "member__first_name", "member__last_name")
     list_filter = ("status",)
     readonly_fields = ("reserved_at",)
 
@@ -119,6 +124,6 @@ class ReservationAdmin(admin.ModelAdmin):
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ("review_id", "book", "member", "rating", "created_at")
-    search_fields = ("book__title", "member__full_name", "comment")
+    search_fields = ("book__title", "member__first_name", "member__last_name", "comment")
     list_filter = ("rating",)
     readonly_fields = ("created_at",)

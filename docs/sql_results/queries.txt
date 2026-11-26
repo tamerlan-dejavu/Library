@@ -14,21 +14,21 @@ Results of queries.sql
 --     A book with two authors gives two rows (one per author).
 loan_id | loan_date  | member             | title                                  | author             | genre       | publisher        | librarian
 --------+------------+--------------------+----------------------------------------+--------------------+-------------+------------------+----------------
-57      | 2026-11-24 | Никита Лебедев     | In the Woods                           | Tana French        | Mystery     | Simon & Schuster | Айдос Нұрланұлы
-85      | 2026-11-24 | Аңсар Әбдірахманов | Көшпенділер                            | Ілияс Есенберлин   | Fiction     | Фолиант          | Michael Brown
-89      | 2026-11-24 | James Johnson      | Becoming                               | Michelle Obama     | Biography   | Alfred A. Knopf  | Айдос Нұрланұлы
-165     | 2026-11-24 | Сергей Волков      | Twenty Thousand Leagues Under the Seas | Jules Verne        | Sci-Fi      | Scribner         | Michael Brown
-177     | 2026-11-24 | Іңкәр Ахметқызы    | To Kill a Mockingbird                  | Harper Lee         | Fiction     | Picador          | Айдос Нұрланұлы
-44      | 2026-11-23 | Dana Sadykova      | Туманность Андромеды                   | Иван Ефремов       | Sci-Fi      | АСТ              | Елена Петрова
-178     | 2026-11-23 | Иван Смирнов       | Gone Girl                              | Gillian Flynn      | Mystery     | Doubleday        | Айдос Нұрланұлы
-63      | 2026-11-22 | Nursultan Kim      | Life of Pi                             | Yann Martel        | Fiction     | Simon & Schuster | Online
-160     | 2026-11-22 | Никита Морозов     | Пикник на обочине                      | Борис Стругацкий   | Sci-Fi      | Эксмо            | Айдос Нұрланұлы
-160     | 2026-11-22 | Никита Морозов     | Пикник на обочине                      | Аркадий Стругацкий | Sci-Fi      | Эксмо            | Айдос Нұрланұлы
-23      | 2026-11-21 | Sophie Smith       | Jane Eyre                              | Charlotte Brontë   | Fiction     | Random House     | Online
-77      | 2026-11-21 | Іңкәр Тұрсынова    | The Murders in the Rue Morgue          | Edgar Allan Poe    | Mystery     | Scribner         | Michael Brown
-168     | 2026-11-21 | Қуаныш Бекұлы      | Sapiens: A Brief History of Humankind  | Yuval Noah Harari  | Non-Fiction | Bloomsbury       | Айдос Нұрланұлы
-53      | 2026-11-20 | Қуаныш Жұмабеков   | In the Woods                           | Tana French        | Mystery     | Simon & Schuster | Online
-161     | 2026-11-20 | Бауыржан Серікұлы  | The Old Man and the Sea                | Ernest Hemingway   | Fiction     | Alfred A. Knopf  | Елена Петрова
+57      | 2026-11-26 | Никита Лебедев     | In the Woods                           | Tana French        | Mystery     | Simon & Schuster | Айдос Нұрланұлы
+85      | 2026-11-26 | Аңсар Әбдірахманов | Көшпенділер                            | Ілияс Есенберлин   | Fiction     | Фолиант          | Michael Brown
+89      | 2026-11-26 | James Johnson      | Becoming                               | Michelle Obama     | Biography   | Alfred A. Knopf  | Айдос Нұрланұлы
+165     | 2026-11-26 | Сергей Волков      | Twenty Thousand Leagues Under the Seas | Jules Verne        | Sci-Fi      | Scribner         | Michael Brown
+177     | 2026-11-26 | Іңкәр Ахметқызы    | To Kill a Mockingbird                  | Harper Lee         | Fiction     | Picador          | Айдос Нұрланұлы
+44      | 2026-11-25 | Dana Sadykova      | Туманность Андромеды                   | Иван Ефремов       | Sci-Fi      | АСТ              | Елена Петрова
+178     | 2026-11-25 | Иван Смирнов       | Gone Girl                              | Gillian Flynn      | Mystery     | Doubleday        | Айдос Нұрланұлы
+63      | 2026-11-24 | Nursultan Kim      | Life of Pi                             | Yann Martel        | Fiction     | Simon & Schuster | Online
+160     | 2026-11-24 | Никита Морозов     | Пикник на обочине                      | Борис Стругацкий   | Sci-Fi      | Эксмо            | Айдос Нұрланұлы
+160     | 2026-11-24 | Никита Морозов     | Пикник на обочине                      | Аркадий Стругацкий | Sci-Fi      | Эксмо            | Айдос Нұрланұлы
+23      | 2026-11-23 | Sophie Smith       | Jane Eyre                              | Charlotte Brontë   | Fiction     | Random House     | Online
+77      | 2026-11-23 | Іңкәр Тұрсынова    | The Murders in the Rue Morgue          | Edgar Allan Poe    | Mystery     | Scribner         | Michael Brown
+168     | 2026-11-23 | Қуаныш Бекұлы      | Sapiens: A Brief History of Humankind  | Yuval Noah Harari  | Non-Fiction | Bloomsbury       | Айдос Нұрланұлы
+53      | 2026-11-22 | Қуаныш Жұмабеков   | In the Woods                           | Tana French        | Mystery     | Simon & Schuster | Online
+161     | 2026-11-22 | Бауыржан Серікұлы  | The Old Man and the Sea                | Ernest Hemingway   | Fiction     | Alfred A. Knopf  | Елена Петрова
 (15 rows)
 
 -- J2. Members with their phones, reviews and reservations (LEFT JOIN).
@@ -36,56 +36,56 @@ loan_id | loan_date  | member             | title                               
 --     that member (then its columns are NULL and COUNT gives 0).
 --     COUNT(DISTINCT ...) removes the duplicates caused by joining
 --     three 1:N tables at once.
-member_id | full_name            | phones                     | reviews | reservations
-----------+----------------------+----------------------------+---------+-------------
-25        | Сәуле Бекқызы        | +77052872269               | 7       | 0
-31        | Alikhan Akhmetov     | +77754990112, +77771224284 | 4       | 2
-61        | Arman Bekov          | +77759792896               | 4       | 1
-89        | Татьяна Соколова     | +77012937099               | 4       | 1
-22        | Никита Морозов       | +77473293399               | 4       | 0
-16        | Madina Omarova       | +77027549319               | 3       | 2
-18        | Дәурен Құдайбергенов | +77052164813, +77789861412 | 3       | 2
-46        | Thomas Smith         | +77027229768               | 3       | 2
-76        | William Smith        | +77474828304, +77719403421 | 3       | 2
-122       | Іңкәр Ахметқызы      | +77019375061               | 3       | 2
-24        | Аңсар Сәрсенбаев     | +77028431778, +77478950276 | 3       | 1
-44        | Aigerim Bekova       | +77014720376, +77710816348 | 3       | 1
-54        | Ерлан Нұрғалиев      | +77758389915               | 3       | 1
-35        | Aigerim Kim          | +77715794356               | 3       | 0
-38        | Мария Соколова       | +77024487430, +77774159388 | 3       | 0
+member_id | first_name | last_name     | phones                     | reviews | reservations
+----------+------------+---------------+----------------------------+---------+-------------
+25        | Сәуле      | Бекқызы       | +77052872269               | 7       | 0
+31        | Alikhan    | Akhmetov      | +77754990112, +77771224284 | 4       | 2
+61        | Arman      | Bekov         | +77759792896               | 4       | 1
+89        | Татьяна    | Соколова      | +77012937099               | 4       | 1
+22        | Никита     | Морозов       | +77473293399               | 4       | 0
+16        | Madina     | Omarova       | +77027549319               | 3       | 2
+18        | Дәурен     | Құдайбергенов | +77052164813, +77789861412 | 3       | 2
+46        | Thomas     | Smith         | +77027229768               | 3       | 2
+76        | William    | Smith         | +77474828304, +77719403421 | 3       | 2
+122       | Іңкәр      | Ахметқызы     | +77019375061               | 3       | 2
+24        | Аңсар      | Сәрсенбаев    | +77028431778, +77478950276 | 3       | 1
+44        | Aigerim    | Bekova        | +77014720376, +77710816348 | 3       | 1
+54        | Ерлан      | Нұрғалиев     | +77758389915               | 3       | 1
+35        | Aigerim    | Kim           | +77715794356               | 3       | 0
+38        | Мария      | Соколова      | +77024487430, +77774159388 | 3       | 0
 (15 rows)
 
 -- J3. Members who never borrowed a book (RIGHT JOIN).
 --     RIGHT JOIN keeps every member (the right table); members without
 --     a matching loan get NULL in l.loan_id, and we keep only those.
-member_id | full_name             | city
-----------+-----------------------+----------
-5         | Grace Johnson         | Қызылорда
-11        | Nursultan Zhaksylykov | Қарағанды
-13        | Сәуле Қасымова        | Қызылорда
-19        | Emma Brown            | Павлодар
-21        | Бауыржан Тұрсынов     | Қарағанды
-28        | Сәуле Өтебаева        | Павлодар
-34        | Аружан Қасымова       | Алматы
-36        | Kamila Sadykova       | NULL
-45        | Әлішер Сәрсенбаев     | Шымкент
-46        | Thomas Smith          | Қарағанды
-48        | Иван Попов            | Алматы
-50        | Dias Bekov            | Қарағанды
-53        | Aruzhan Akhmetova     | NULL
-75        | Жанар Өтебаева        | Қарағанды
-78        | Гүлнұр Серікқызы      | Қызылорда
-85        | Grace Walker          | NULL
-87        | William Clark         | Астана
-88        | Шаһмардан Бекұлы      | Павлодар
-91        | Emma Smith            | Қарағанды
-97        | Grace Smith           | Өскемен
-105       | Михаил Кузнецов       | Павлодар
-108       | Arman Akhmetov        | Өскемен
-110       | Бауыржан Жұмабеков    | Қызылорда
-114       | Алексей Кузнецов      | Қарағанды
-117       | Dana Akhmetova        | Қызылорда
-120       | Emma Clark            | NULL
+member_id | first_name | last_name   | city
+----------+------------+-------------+----------
+5         | Grace      | Johnson     | Қызылорда
+11        | Nursultan  | Zhaksylykov | Қарағанды
+13        | Сәуле      | Қасымова    | Қызылорда
+19        | Emma       | Brown       | Павлодар
+21        | Бауыржан   | Тұрсынов    | Қарағанды
+28        | Сәуле      | Өтебаева    | Павлодар
+34        | Аружан     | Қасымова    | Алматы
+36        | Kamila     | Sadykova    | NULL
+45        | Әлішер     | Сәрсенбаев  | Шымкент
+46        | Thomas     | Smith       | Қарағанды
+48        | Иван       | Попов       | Алматы
+50        | Dias       | Bekov       | Қарағанды
+53        | Aruzhan    | Akhmetova   | NULL
+75        | Жанар      | Өтебаева    | Қарағанды
+78        | Гүлнұр     | Серікқызы   | Қызылорда
+85        | Grace      | Walker      | NULL
+87        | William    | Clark       | Астана
+88        | Шаһмардан  | Бекұлы      | Павлодар
+91        | Emma       | Smith       | Қарағанды
+97        | Grace      | Smith       | Өскемен
+105       | Михаил     | Кузнецов    | Павлодар
+108       | Arman      | Akhmetov    | Өскемен
+110       | Бауыржан   | Жұмабеков   | Қызылорда
+114       | Алексей    | Кузнецов    | Қарағанды
+117       | Dana       | Akhmetova   | Қызылорда
+120       | Emma       | Clark       | NULL
 (26 rows)
 
 -- AGGREGATES (COUNT, SUM, AVG, MIN, MAX, GROUP BY, HAVING)
@@ -97,34 +97,34 @@ Fiction     | 52    | 10          | 36.4
 Mystery     | 33    | 4           | 34.5
 Sci-Fi      | 31    | 2           | 17.7
 Non-Fiction | 22    | 1           | 22.9
-Fantasy     | 21    | 4           | 34.3
 Biography   | 21    | 2           | 23.5
+Fantasy     | 21    | 4           | 34.3
 (6 rows)
 
 -- A2. Most active members: at least 3 loans (HAVING filters groups,
 --     WHERE would filter single rows). Reviews counted by a subquery
 --     so that the two counts do not multiply each other.
-full_name            | loans | reviews | first_loan | last_loan
+member               | loans | reviews | first_loan | last_loan
 ---------------------+-------+---------+------------+-----------
-Никита Морозов       | 5     | 4       | 2025-04-14 | 2026-11-22
-Аңсар Сәрсенбаев     | 4     | 3       | 2025-07-21 | 2026-09-28
-Dana Sadykova        | 4     | 2       | 2025-05-31 | 2026-11-23
-Дмитрий Лебедев      | 4     | 2       | 2025-04-20 | 2026-11-16
-Alikhan Bekov        | 4     | 2       | 2026-05-17 | 2026-10-01
-Oliver Walker        | 4     | 2       | 2025-02-15 | 2026-08-24
-Сәуле Бекқызы        | 3     | 7       | 2025-05-04 | 2026-09-23
-Alikhan Akhmetov     | 3     | 4       | 2026-05-21 | 2026-08-18
-Татьяна Соколова     | 3     | 4       | 2025-04-05 | 2026-03-05
-Іңкәр Ахметқызы      | 3     | 3       | 2025-05-08 | 2026-11-24
-Aigerim Kim          | 3     | 3       | 2025-03-19 | 2026-08-10
-Ерлан Нұрғалиев      | 3     | 3       | 2025-06-12 | 2026-08-25
-Dana Zhaksylykova    | 3     | 2       | 2025-05-26 | 2026-11-17
-Sarah Johnson        | 3     | 2       | 2025-08-06 | 2026-10-31
-Сәуле Әбдірахманова  | 3     | 2       | 2025-08-12 | 2026-04-26
-Ольга Попова         | 3     | 1       | 2025-05-10 | 2026-05-21
-Қуаныш Құдайбергенов | 3     | 1       | 2025-06-01 | 2026-05-02
-Arman Kim            | 3     | 1       | 2025-04-25 | 2026-07-13
-William Walker       | 3     | 0       | 2025-04-07 | 2025-12-03
+Никита Морозов       | 5     | 4       | 2025-04-16 | 2026-11-24
+Аңсар Сәрсенбаев     | 4     | 3       | 2025-07-23 | 2026-09-30
+Dana Sadykova        | 4     | 2       | 2025-06-02 | 2026-11-25
+Дмитрий Лебедев      | 4     | 2       | 2025-04-22 | 2026-11-18
+Alikhan Bekov        | 4     | 2       | 2026-05-19 | 2026-10-03
+Oliver Walker        | 4     | 2       | 2025-02-17 | 2026-08-26
+Сәуле Бекқызы        | 3     | 7       | 2025-05-06 | 2026-09-25
+Татьяна Соколова     | 3     | 4       | 2025-04-07 | 2026-03-07
+Alikhan Akhmetov     | 3     | 4       | 2026-05-23 | 2026-08-20
+Ерлан Нұрғалиев      | 3     | 3       | 2025-06-14 | 2026-08-27
+Aigerim Kim          | 3     | 3       | 2025-03-21 | 2026-08-12
+Іңкәр Ахметқызы      | 3     | 3       | 2025-05-10 | 2026-11-26
+Сәуле Әбдірахманова  | 3     | 2       | 2025-08-14 | 2026-04-28
+Dana Zhaksylykova    | 3     | 2       | 2025-05-28 | 2026-11-19
+Sarah Johnson        | 3     | 2       | 2025-08-08 | 2026-11-02
+Ольга Попова         | 3     | 1       | 2025-05-12 | 2026-05-23
+Қуаныш Құдайбергенов | 3     | 1       | 2025-06-03 | 2026-05-04
+Arman Kim            | 3     | 1       | 2025-04-27 | 2026-07-15
+William Walker       | 3     | 0       | 2025-04-09 | 2025-12-05
 (19 rows)
 
 -- A3. Books per publisher with the oldest and newest publication year
@@ -166,51 +166,51 @@ Little, Brown and Company | 1     | 1969   | 1969   | 3
 -- SUBQUERIES
 -- S1. Scalar subquery: books whose average rating is above the average
 --     of all reviews. The subquery returns exactly one number.
-title                                  | avg_rating | reviews
----------------------------------------+------------+--------
-2001: A Space Odyssey                  | 5.00       | 2
-Fahrenheit 451                         | 5.00       | 2
-To Kill a Mockingbird                  | 5.00       | 1
-Герой нашего времени                   | 5.00       | 1
-The Grapes of Wrath                    | 5.00       | 1
-Long Walk to Freedom                   | 5.00       | 1
-Homo Deus: A Brief History of Tomorrow | 5.00       | 1
-Guns, Germs, and Steel                 | 5.00       | 1
-Einstein: His Life and Universe        | 5.00       | 1
-A Game of Thrones                      | 5.00       | 1
-Sapiens: A Brief History of Humankind  | 5.00       | 1
-The Martian                            | 5.00       | 1
-Life of Pi                             | 5.00       | 1
-Do Androids Dream of Electric Sheep?   | 5.00       | 1
-Jane Eyre                              | 5.00       | 1
+title                                 | avg_rating | reviews
+--------------------------------------+------------+--------
+2001: A Space Odyssey                 | 5.00       | 2
+Fahrenheit 451                        | 5.00       | 2
+The Book Thief                        | 5.00       | 1
+Murder on the Orient Express          | 5.00       | 1
+The Name of the Wind                  | 5.00       | 1
+To Kill a Mockingbird                 | 5.00       | 1
+Sapiens: A Brief History of Humankind | 5.00       | 1
+Guns, Germs, and Steel                | 5.00       | 1
+Пикник на обочине                     | 5.00       | 1
+The Grapes of Wrath                   | 5.00       | 1
+Jane Eyre                             | 5.00       | 1
+The Martian                           | 5.00       | 1
+Do Androids Dream of Electric Sheep?  | 5.00       | 1
+Long Walk to Freedom                  | 5.00       | 1
+Slaughterhouse-Five                   | 5.00       | 1
 (15 rows)
 
 -- S2. EXISTS with a correlated subquery: members who have an overdue loan.
 --     The inner query uses m.member_id, so it runs for every member.
-member_id | full_name           | email
-----------+---------------------+-----------------------------------
-3         | Alikhan Bekov       | alikhan.bekov56@example.com
-68        | Arman Kim           | arman.kim47@example.com
-104       | Daniel Brown        | daniel.brown11@example.com
-57        | James Wilson        | james.wilson22@example.com
-12        | Michael Walker      | michael.walker67@example.com
-39        | Oliver Walker       | oliver.walker26@example.com
-115       | Olivia Smith        | olivia.smith68@example.com
-9         | Sarah Johnson       | sarah.johnson84@example.com
-111       | Айгерім Бекқызы     | aygerim.bekqyzy43@example.com
-96        | Әлішер Қасымов      | alisher.qasymov51@example.com
-103       | Гүлнұр Жұмабекова   | gulnur.zhumabekova87@example.com
-77        | Дана Сәрсенбаева    | dana.sarsenbaeva17@example.com
-73        | Дмитрий Лебедев     | dmitriy.lebedev28@example.com
-94        | Екатерина Лебедева  | ekaterina.lebedeva74@example.com
-123       | Ерғали Нұрғалиев    | ergali.nurgaliev4@example.com
-98        | Мөлдір Ахметқызы    | moldir.akhmetqyzy20@example.com
-121       | Наталья Смирнова    | natalya.smirnova94@example.com
-81        | Никита Соколов      | nikita.sokolov59@example.com
-59        | Ольга Попова        | olga.popova60@example.com
-58        | Сәуле Әбдірахманова | saule.abdirakhmanova73@example.com
-89        | Татьяна Соколова    | tatyana.sokolova93@example.com
-113       | Үміт Қасымова       | umit.qasymova7@example.com
+member_id | first_name | last_name     | email
+----------+------------+---------------+-----------------------------------
+3         | Alikhan    | Bekov         | alikhan.bekov56@example.com
+104       | Daniel     | Brown         | daniel.brown11@example.com
+9         | Sarah      | Johnson       | sarah.johnson84@example.com
+68        | Arman      | Kim           | arman.kim47@example.com
+115       | Olivia     | Smith         | olivia.smith68@example.com
+12        | Michael    | Walker        | michael.walker67@example.com
+39        | Oliver     | Walker        | oliver.walker26@example.com
+57        | James      | Wilson        | james.wilson22@example.com
+98        | Мөлдір     | Ахметқызы     | moldir.akhmetqyzy20@example.com
+58        | Сәуле      | Әбдірахманова | saule.abdirakhmanova73@example.com
+111       | Айгерім    | Бекқызы       | aygerim.bekqyzy43@example.com
+103       | Гүлнұр     | Жұмабекова    | gulnur.zhumabekova87@example.com
+96        | Әлішер     | Қасымов       | alisher.qasymov51@example.com
+113       | Үміт       | Қасымова      | umit.qasymova7@example.com
+73        | Дмитрий    | Лебедев       | dmitriy.lebedev28@example.com
+94        | Екатерина  | Лебедева      | ekaterina.lebedeva74@example.com
+123       | Ерғали     | Нұрғалиев     | ergali.nurgaliev4@example.com
+59        | Ольга      | Попова        | olga.popova60@example.com
+77        | Дана       | Сәрсенбаева   | dana.sarsenbaeva17@example.com
+121       | Наталья    | Смирнова      | natalya.smirnova94@example.com
+81        | Никита     | Соколов       | nikita.sokolov59@example.com
+89        | Татьяна    | Соколова      | tatyana.sokolova93@example.com
 (22 rows)
 
 -- S3. NOT EXISTS: books that were never borrowed.

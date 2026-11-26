@@ -5,8 +5,10 @@ from functools import wraps
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
-from django.db import transaction
+from django.core.validators import validate_email
+from django.db import IntegrityError, transaction
 from django.db.models import Avg, Q
 from django.http import JsonResponse
 from django.utils import timezone
@@ -19,8 +21,12 @@ BOOKS_PER_PAGE = 12
 
 # ---------- small helpers ----------
 
-def error(message, status=400):
-    return JsonResponse({"error": message}, status=status)
+def error(message, status=400, field=None):
+    # field (optional) tells the form which input the message belongs to
+    data = {"error": message}
+    if field:
+        data["field"] = field
+    return JsonResponse(data, status=status)
 
 
 def allow(method):
@@ -56,11 +62,31 @@ def read_json(request):
 
 def get_member(user):
     # Every logged-in user needs a Member row (e.g. an admin created by
-    # createsuperuser has none yet, so we create it on first use)
+    # createsuperuser has none yet, so we create it on first use from
+    # the account data; names and e-mail may not be empty in the table)
     member, created = Member.objects.get_or_create(
-        user=user, defaults={"full_name": user.username}
+        user=user,
+        defaults={
+            "first_name": user.first_name or user.username,
+            "last_name": user.last_name or user.username,
+            "email": (user.email or f"{user.username}@users.local").lower(),
+        },
     )
     return member
+
+
+def is_valid_name(name):
+    # At least 2 characters: letters of any alphabet (Kazakh, Russian,
+    # English, ...), and also space, hyphen and apostrophe
+    return (2 <= len(name) <= 150
+            and any(ch.isalpha() for ch in name)
+            and all(ch.isalpha() or ch in " -'’" for ch in name))
+
+
+def email_is_taken(email):
+    # Compare without letter case, with members and with login accounts
+    return (Member.objects.filter(email__iexact=email).exists()
+            or User.objects.filter(Q(username__iexact=email) | Q(email__iexact=email)).exists())
 
 
 def books_with_rating():
@@ -91,13 +117,12 @@ def book_to_dict(book):
 
 
 def review_author(review):
-    # Members from seed.sql have no login, so fall back to their full name
+    # Short public name: first name + first letter of the last name,
+    # e.g. "Алихан Б." (the full name is not shown to other visitors)
     member = review.member
     if member is None:
         return None
-    if member.user is not None:
-        return member.user.username
-    return member.full_name
+    return f"{member.first_name} {member.last_name[:1]}."
 
 
 # ---------- books ----------
@@ -156,7 +181,7 @@ def book_detail(request, book_id):
 
     reviews = (
         Review.objects.filter(book=book)
-        .select_related("member__user")
+        .select_related("member")
         .order_by("-created_at")
     )
 
@@ -164,7 +189,7 @@ def book_detail(request, book_id):
     data["description"] = book.description
     data["reviews"] = [
         {
-            "username": review_author(r),
+            "author": review_author(r),
             "rating": r.rating,
             "comment": r.comment,
             "created_at": r.created_at,
@@ -182,35 +207,55 @@ def register(request):
     if data is None:
         return error("Invalid JSON")
 
-    username = str(data.get("username", "")).strip()
+    first_name = str(data.get("first_name", "")).strip()
+    last_name = str(data.get("last_name", "")).strip()
+    # E-mail addresses are stored in lower case
+    email = str(data.get("email", "")).strip().lower()
     password = str(data.get("password", ""))
-    confirm_password = str(data.get("confirm_password", ""))
+    password2 = str(data.get("password2", ""))
 
-    # Same rules as front/js/register.js
-    if len(username) < 2:
-        return error("Username must have at least 2 characters.")
-    if User.objects.filter(username=username).exists():
-        return error("This username is already taken.")
+    # Same rules as front/js/register.js; "field" names the form input
+    if not is_valid_name(first_name):
+        return error("First name: at least 2 letters (spaces, - and ' are allowed).", field="first_name")
+    if not is_valid_name(last_name):
+        return error("Last name: at least 2 letters (spaces, - and ' are allowed).", field="last_name")
+    try:
+        validate_email(email)
+    except ValidationError:
+        return error("Please enter a valid e-mail address.", field="email")
+    if len(email) > 150:  # Django keeps the e-mail as the login name (max 150)
+        return error("This e-mail address is too long.", field="email")
+    if email_is_taken(email):
+        return error("An account with this e-mail already exists.", field="email")
     if password == "":
-        return error("Please enter a password.")
-    if password != confirm_password:
-        return error("Passwords do not match.")
+        return error("Please enter a password.", field="password")
+    if password != password2:
+        return error("Passwords do not match.", field="password2")
     try:
         birth_year = int(data.get("birth_year"))
     except (TypeError, ValueError):
-        return error("Please enter your birth year.")
+        return error("Please enter your birth year.", field="birth_year")
     if birth_year < 1900:
-        return error("Please enter a real birth year.")
+        return error("Please enter a real birth year.", field="birth_year")
     if timezone.localdate().year - birth_year <= 18:
-        return error("You must be older than 18.")
+        return error("You must be older than 18.", field="birth_year")
 
-    # Both rows are saved together, or neither of them
-    with transaction.atomic():
-        user = User.objects.create_user(username=username, password=password)
-        Member.objects.create(user=user, full_name=username, birth_year=birth_year)
+    # Both rows are saved together, or neither of them.
+    # The e-mail is also the (hidden) Django username, so login works by e-mail.
+    try:
+        with transaction.atomic():
+            user = User.objects.create_user(
+                username=email, email=email, password=password,
+                first_name=first_name, last_name=last_name,
+            )
+            Member.objects.create(user=user, first_name=first_name, last_name=last_name,
+                                  email=email, birth_year=birth_year)
+    except IntegrityError:
+        # Someone registered the same e-mail at the same moment
+        return error("An account with this e-mail already exists.", field="email")
 
     login(request, user)
-    return JsonResponse({"username": user.username}, status=201)
+    return JsonResponse({"first_name": first_name}, status=201)
 
 
 @allow("POST")
@@ -219,17 +264,19 @@ def login_view(request):
     if data is None:
         return error("Invalid JSON")
 
-    # authenticate() returns the User, or None if the password is wrong
+    # The Django username of a member is the e-mail in lower case.
+    # authenticate() returns the User, or None if e-mail or password is wrong.
     user = authenticate(
         request,
-        username=data.get("username", ""),
-        password=data.get("password", ""),
+        username=str(data.get("email", "")).strip().lower(),
+        password=str(data.get("password", "")),
     )
     if user is None:
-        return error("Wrong username or password.", 401)
+        # One message for both cases, so nobody can test which e-mails exist
+        return error("Invalid email or password.", 401)
 
     login(request, user)
-    return JsonResponse({"username": user.username})
+    return JsonResponse({"first_name": get_member(user).first_name})
 
 
 @allow("POST")
@@ -252,7 +299,9 @@ def me(request):
 
     return JsonResponse({
         "logged_in": True,
-        "username": request.user.username,
+        "first_name": member.first_name,
+        "last_name": member.last_name,
+        "email": member.email,
         "loans": [
             {
                 "book_id": loan.book_id,

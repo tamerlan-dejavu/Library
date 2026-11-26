@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
-from django.db.models.functions import Now
+from django.db.models.functions import Lower, Now
 from django.utils import timezone
 
 
@@ -98,8 +98,10 @@ class Member(models.Model):
     member_id = models.AutoField(primary_key=True)
     # Optional link to a Django login account
     user = models.OneToOneField(User, models.SET_NULL, blank=True, null=True)
-    full_name = models.TextField()
-    email = models.TextField(unique=True, blank=True, null=True)
+    first_name = models.TextField()
+    last_name = models.TextField()
+    # Unique ignoring letter case, see Meta.constraints
+    email = models.EmailField(max_length=254)
     birth_year = models.IntegerField(
         blank=True, null=True,
         validators=[MinValueValidator(1900), MaxValueValidator(2008)],
@@ -113,9 +115,17 @@ class Member(models.Model):
     class Meta:
         managed = False
         db_table = "member"
+        # Same as the unique index on lower(email) in schema.sql; Django
+        # checks it in forms, so the admin shows a clear message
+        constraints = [
+            models.UniqueConstraint(
+                Lower("email"), name="member_email_lower_key",
+                violation_error_message="A member with this e-mail already exists.",
+            ),
+        ]
 
     def __str__(self):
-        return self.full_name
+        return f"{self.first_name} {self.last_name}"
 
 
 class MemberPhone(models.Model):
