@@ -51,11 +51,11 @@ async function apiGet(url) {
   return sendRequest(url, { method: "GET" });
 }
 
-// POST request with a JSON body. The CSRF token is read from the cookie
-// right now, because Django changes it after login.
-async function apiPost(url, data) {
+// Request that changes data (POST, PATCH) with a JSON body. The CSRF token
+// is read from the cookie right now, because Django changes it after login.
+async function sendJson(method, url, data) {
   return sendRequest(url, {
-    method: "POST",
+    method: method,
     headers: {
       "Content-Type": "application/json",
       "X-CSRFToken": getCookie("csrftoken")
@@ -64,8 +64,38 @@ async function apiPost(url, data) {
   });
 }
 
+async function apiPost(url, data) {
+  return sendJson("POST", url, data);
+}
+
+async function apiPatch(url, data) {
+  return sendJson("PATCH", url, data);
+}
+
+// Small helper to build elements without innerHTML:
+// el("a", { className: "x", href: "y", text: "Hi" }, [child1, child2])
+// Keys other than className and text become attributes.
+function el(tag, props, children) {
+  const node = document.createElement(tag);
+  const options = props || {};
+  for (const key in options) {
+    if (key === "className") {
+      node.className = options[key];
+    } else if (key === "text") {
+      node.textContent = options[key];
+    } else {
+      node.setAttribute(key, options[key]);
+    }
+  }
+  const list = children || [];
+  for (let i = 0; i < list.length; i++) {
+    node.appendChild(list[i]);
+  }
+  return node;
+}
+
 // Shows a Bootstrap alert in the top right corner.
-// type: "primary" for errors, "secondary" for normal messages.
+// type: "danger" for errors, "secondary" for normal messages.
 // link (optional): { href: "...", text: "..." }
 function showAlert(message, type, link) {
   let area = document.getElementById("alertArea");
@@ -77,7 +107,7 @@ function showAlert(message, type, link) {
   }
 
   const alert = document.createElement("div");
-  alert.className = "alert alert-" + (type || "primary");
+  alert.className = "alert alert-" + (type || "danger");
   alert.setAttribute("role", "alert");
 
   const text = document.createElement("div");

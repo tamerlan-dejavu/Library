@@ -8,14 +8,15 @@ function showNotFound(message) {
   showBoxMessage("notFound", message);
 }
 
-// Adds a small "label: value" line to the details list
-function addDetail(list, label, value) {
-  const dt = document.createElement("dt");
-  dt.textContent = label;
-  const dd = document.createElement("dd");
-  dd.textContent = value;
-  list.appendChild(dt);
-  list.appendChild(dd);
+// Yellow stars with a text for screen readers, e.g. "4 out of 5 stars"
+function makeStars(rating) {
+  return el("span", { className: "stars", role: "img", "aria-label": rating + " out of 5 stars",
+                      text: starsText(rating) });
+}
+
+// "2026-11-24T08:30:00" -> "2026-11-24"
+function shortDate(value) {
+  return value ? value.slice(0, 10) : "";
 }
 
 // Draws the list of reviews (newest first, as the API sends them)
@@ -24,38 +25,22 @@ function renderReviews(reviews) {
   list.textContent = "";
 
   if (reviews.length === 0) {
-    const p = document.createElement("p");
-    p.className = "text-muted-ink";
-    p.textContent = "No reviews yet. Be the first to write one.";
-    list.appendChild(p);
+    list.appendChild(el("p", { text: "No reviews yet. Be the first to write one." }));
     return;
   }
 
   for (let i = 0; i < reviews.length; i++) {
     const r = reviews[i];
-    const item = document.createElement("article");
-    item.className = "review";
-
-    const head = document.createElement("p");
-    head.className = "mb-1";
-    const name = document.createElement("strong");
-    name.textContent = r.author || "Reader";
-    head.appendChild(name);
-
-    const meta = document.createElement("span");
-    meta.className = "text-muted-ink ms-2";
-    // created_at looks like "2026-11-24T08:30:00"; we only need the date
-    const date = r.created_at ? r.created_at.slice(0, 10) : "";
-    meta.textContent = r.rating + " / 5 · " + date;
-    head.appendChild(meta);
-
-    const comment = document.createElement("p");
-    comment.className = "mb-0";
-    comment.textContent = r.comment || "";
-
-    item.appendChild(head);
-    item.appendChild(comment);
-    list.appendChild(item);
+    list.appendChild(el("article", {
+      className: "card card-body bg-secondary-subtle border-0 border-top border-3 border-danger mb-3"
+    }, [
+      el("div", { className: "d-flex justify-content-between fw-bold mb-1" }, [
+        el("span", { text: r.author || "Reader" }),
+        el("span", { text: shortDate(r.created_at) })
+      ]),
+      el("p", { className: "mb-1" }, [makeStars(r.rating)]),
+      el("p", { className: "mb-0", text: r.comment || "" })
+    ]));
   }
 }
 
@@ -74,41 +59,39 @@ async function loadBook() {
     return null;
   }
 
-  document.title = book.title + " - Book Catalog";
+  document.title = book.title + " - Book Details";
 
   const coverBox = document.getElementById("coverBox");
   coverBox.textContent = "";
-  coverBox.appendChild(createCover(book, "L"));
+  coverBox.appendChild(createCover(book, "L", "object-fit-cover bg-secondary-subtle book-cover-large"));
 
   document.getElementById("bookTitle").textContent = book.title;
   document.getElementById("bookAuthors").textContent = "by " + book.authors.join(", ");
-  document.getElementById("bestsellerBadge").classList.toggle("d-none", !book.is_bestseller);
+  document.getElementById("bookGenre").textContent = book.genre || "No genre";
 
-  const details = document.getElementById("bookDetails");
-  details.textContent = "";
-  addDetail(details, "Genre", book.genre || "No genre");
-  addDetail(details, "Year", book.year || "Unknown");
-  addDetail(details, "Rating", ratingText(book.rating));
-  addDetail(details, "Copies on the shelf", book.available_copies);
+  // Rating chip: stars, average and number of reviews
+  const ratingBox = document.getElementById("bookRating");
+  ratingBox.textContent = "";
+  if (book.rating === null) {
+    ratingBox.textContent = "no ratings yet";
+  } else {
+    const count = book.reviews.length === 1 ? "1 review" : book.reviews.length + " reviews";
+    ratingBox.appendChild(makeStars(book.rating));
+    ratingBox.appendChild(document.createTextNode(" " + book.rating + " (" + count + ")"));
+  }
 
-  document.getElementById("bookDescription").textContent = book.description || "";
+  document.getElementById("bookDescription").textContent = book.description || "No description yet.";
 
-  // Reload the whole book after borrowing, so the copies update
+  // Borrow (or Reserve) and the number of free copies.
+  // After borrowing, the whole book is loaded again so the numbers update.
   const buttonBox = document.getElementById("borrowBox");
   buttonBox.textContent = "";
-  buttonBox.appendChild(createBorrowButton(book, loadBook));
+  buttonBox.appendChild(createBorrowButton(book, loadBook, "btn btn-danger px-4"));
+  document.getElementById("copiesInfo").textContent =
+    book.available_copies + " of " + book.total_copies + " copies available";
 
   renderReviews(book.reviews);
   return book;
-}
-
-// First load of the page: the book, then the Open Library card
-// (only once, not after every borrow or review)
-async function startPage() {
-  const book = await loadBook();
-  if (book !== null) {
-    loadOpenLibrary(book);
-  }
 }
 
 // Shows the review form only to logged-in users
@@ -120,19 +103,27 @@ async function setupReviewForm() {
     showAlert("Could not check your account. " + err.message);
     return;
   }
-
   document.getElementById("reviewForm").classList.toggle("d-none", !me.logged_in);
   document.getElementById("signInToReview").classList.toggle("d-none", me.logged_in);
 }
 
 // Sends the review form to the API, then reloads the reviews
-async function submitReview() {
+async function submitReview(event) {
+  event.preventDefault();
   const form = document.getElementById("reviewForm");
   hideBoxMessage("reviewError");
+  hideBoxMessage("reviewSuccess");
+
+  // value of the checked radio button, or "" when none is chosen
+  const rating = form.elements["rating"].value;
+  if (rating === "") {
+    showBoxMessage("reviewError", "Please select a rating from 1 to 5.");
+    return;
+  }
 
   try {
     await apiPost("/api/books/" + bookId + "/reviews/", {
-      rating: parseInt(form.elements["rating"].value),
+      rating: parseInt(rating),
       comment: form.elements["comment"].value.trim()
     });
   } catch (err) {
@@ -142,16 +133,25 @@ async function submitReview() {
   }
 
   form.reset();
-  showAlert("Thank you, your review was saved.", "secondary");
+  showBoxMessage("reviewSuccess", "Thank you, your review was saved.");
   loadBook();
+}
+
+// First load: the book, then the Open Library block (only once)
+async function startPage() {
+  const book = await loadBook();
+  if (book !== null) {
+    loadOpenLibrary(book);
+  }
 }
 
 // DOMContentLoaded waits until every script (also openlibrary.js) is loaded
 document.addEventListener("DOMContentLoaded", function () {
   if (bookId === null || bookId === "") {
     showNotFound("No book was selected. Please choose one in the catalog.");
-  } else {
-    startPage();
-    setupReviewForm();
+    return;
   }
+  document.getElementById("reviewForm").addEventListener("submit", submitReview);
+  startPage();
+  setupReviewForm();
 });
