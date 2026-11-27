@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.core.validators import validate_email
 from django.db import IntegrityError, transaction
-from django.db.models import Avg, Count, Max, Min, Q
+from django.db.models import Avg, BooleanField, Count, ExpressionWrapper, Max, Min, Q
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -179,10 +179,16 @@ def book_list(request):
         )
 
     if params.get("bestseller") == "1":
-        books = books.filter(is_bestseller=True)
+        # Bestsellers: books with a cover first, then the others by id
+        # (SQL: ORDER BY (cover_url IS NULL), book_id)
+        books = books.filter(is_bestseller=True).annotate(
+            no_cover=ExpressionWrapper(Q(cover_url__isnull=True), output_field=BooleanField())
+        ).order_by("no_cover", "book_id")
+    else:
+        books = books.order_by("title")
 
     # get_page() also handles a missing or wrong page number
-    paginator = Paginator(books.order_by("title"), BOOKS_PER_PAGE)
+    paginator = Paginator(books, BOOKS_PER_PAGE)
     page = paginator.get_page(params.get("page"))
 
     return JsonResponse({

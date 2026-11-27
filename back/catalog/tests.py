@@ -91,6 +91,14 @@ class ApiTests(CatalogTestData):
         r = self.client.get(f"/api/books/?q={TAG}&bestseller=1&year_from=1940&year_to=1960")
         self.assertEqual([b["title"] for b in r.json()["books"]], [f"{TAG} Book One"])
 
+    def test_bestsellers_with_cover_come_first(self):
+        # book1 is a bestseller without a cover; this one is newer but has one
+        covered = Book.objects.create(title=f"{TAG} Covered", is_bestseller=True, cover_url="covers/x.jpg",
+                                      category=self.alpha, total_copies=1, available_copies=1)
+        books = self.client.get(f"/api/books/?bestseller=1&q={TAG}").json()["books"]
+        self.assertEqual([b["id"] for b in books], [covered.book_id, self.book1.book_id])
+        self.assertEqual(books[0]["cover_url"], "covers/x.jpg")
+
     def test_books_bad_year(self):
         r = self.client.get("/api/books/?year_from=abc")
         self.assertEqual(r.status_code, 400)

@@ -1,6 +1,7 @@
 -- ======================================================================
 -- Security: an application role with only the rights the website needs.
--- Run as the admin user (postgres) AFTER migrate, schema, seed, procedures:
+-- Run as the admin user (postgres) AFTER migrate, schema, seed, procedures,
+-- post_seed_covers (this file is always the last one):
 --     python db/run_sql.py db/security.sql
 -- The password below is a placeholder (app_password with a colon in
 -- front). run_sql.py replaces it with the environment variable
