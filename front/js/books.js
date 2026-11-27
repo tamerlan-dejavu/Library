@@ -1,114 +1,94 @@
-// Book cover and book card, shared by Home, Catalog and Book pages
+// Shared by Home, Catalog and Book pages: messages, covers, book cards, Borrow.
+// Each of these pages defines its own function refreshPage(), which loads
+// the books again after a successful Borrow.
 
-const PLACEHOLDER_COVER = "assets/book-placeholder.svg";
+const PLACEHOLDER = "assets/book-placeholder.svg";
 
-// Average rating as stars, e.g. 3.6 -> "★★★★☆" (rounded to whole stars)
-function starsText(rating) {
-  const full = Math.round(rating || 0);
-  return "★".repeat(full) + "☆".repeat(5 - full);
+// Shows a message in the top right corner (#alertArea, from <template id="messageTemplate">).
+// isError: red box; otherwise grey. linkText/linkHref: an optional link.
+function showMessage(text, isError, linkText, linkHref) {
+  const box = document.getElementById("messageTemplate").content.firstElementChild.cloneNode(true);
+  if (isError) {
+    box.classList.add("alert-danger");
+  } else {
+    box.classList.add("alert-secondary");
+  }
+  box.querySelector(".message-text").textContent = text;
+  if (linkText) {
+    const link = box.querySelector(".message-link");
+    link.textContent = linkText;
+    link.href = linkHref;
+    link.classList.remove("d-none");
+  }
+  box.querySelector(".btn-close").addEventListener("click", function () {
+    box.remove();
+  });
+  document.getElementById("alertArea").appendChild(box);
 }
 
-// Open Library covers come in sizes S, M and L ("...-L.jpg").
-// Cards use the medium one, the book page the large one.
-// Our own copies ("covers/12.jpg") are used as they are.
-function coverUrl(book, size) {
+// Puts the cover into an <img>. No cover -> the placeholder at once.
+// If the picture cannot be loaded, the placeholder is shown (only once).
+// size "M" (cards) or "L" (book page) for Open Library pictures.
+function setCover(img, book, size) {
+  img.alt = book.title + " cover";
   if (!book.cover_url) {
-    return null;
+    img.src = PLACEHOLDER;
+    return;
   }
-  if (!book.cover_url.startsWith("http")) {
-    return book.cover_url;
+  img.addEventListener("error", function () {
+    img.src = PLACEHOLDER;
+  }, { once: true });
+  if (book.cover_url.startsWith("http")) {
+    img.src = book.cover_url.replace("-L.jpg", "-" + size + ".jpg");
+  } else {
+    img.src = book.cover_url;   // our own copy, e.g. "covers/12.jpg"
   }
-  return book.cover_url.replace("-L.jpg", "-" + size + ".jpg");
 }
 
-// Called when a cover fails: show the placeholder at once, then try the
-// real cover once more after 2 seconds and use it only if it loads
-function handleCoverError(img, url) {
-  img.onerror = null;           // the placeholder can never call us again
-  img.src = PLACEHOLDER_COVER;
+// Makes one book card from <template id="bookCardTemplate">
+function makeBookCard(book, showBadge) {
+  const card = document.getElementById("bookCardTemplate").content.firstElementChild.cloneNode(true);
+  const link = "book.html?id=" + book.id;
 
-  setTimeout(function () {
-    const retry = new Image();
-    retry.referrerPolicy = "no-referrer";
-    retry.onload = function () {
-      img.src = url;
-    };
-    retry.src = url;
-  }, 2000);
-}
-
-// Creates the cover <img>. size: "M" for cards, "L" for the book page.
-// className sets the look (card picture or big picture).
-function createCover(book, size, className) {
-  const img = el("img", { alt: book.title + " cover", className: className, loading: "lazy", decoding: "async" });
-  img.referrerPolicy = "no-referrer";
-
-  const url = coverUrl(book, size);
-  if (url === null) {
-    img.src = PLACEHOLDER_COVER;
-    return img;
+  card.querySelector(".cover-link").href = link;
+  setCover(card.querySelector("img"), book, "M");
+  if (showBadge && book.is_bestseller) {
+    card.querySelector(".book-card-badge").classList.remove("d-none");
   }
-  // The handler is set BEFORE src, so even a very fast failure is caught
-  img.onerror = function () {
-    handleCoverError(img, url);
-  };
-  img.src = url;
-  return img;
+  card.querySelector(".title-link").href = link;
+  card.querySelector(".title-link").textContent = book.title;
+  card.querySelector(".book-card-author").textContent = book.authors.join(", ");
+
+  const button = card.querySelector(".book-card-action");
+  setBorrowButton(button, book);
+  return card;
 }
 
-// Borrow / Reserve button. afterBorrow runs after success.
-function createBorrowButton(book, afterBorrow, className) {
-  const button = el("button", {
-    type: "button", className: className || "btn btn-danger",
-    text: book.available_copies > 0 ? "Borrow" : "Reserve"
-  });
+// Text and click of the Borrow / Reserve button
+function setBorrowButton(button, book) {
+  if (book.available_copies > 0) {
+    button.textContent = "Borrow";
+  } else {
+    button.textContent = "Reserve";
+  }
   button.addEventListener("click", function () {
-    borrowBook(book.id, button, afterBorrow);
+    borrowBook(book.id, button);
   });
-  return button;
 }
 
-// Sends the borrow request and shows the result in an alert
-async function borrowBook(bookId, button, afterBorrow) {
+// Sends the borrow request and shows the answer
+async function borrowBook(bookId, button) {
   button.disabled = true;
   try {
-    const data = await apiPost("/api/books/" + bookId + "/borrow/");
-    showAlert(data.message, "secondary");
-    if (afterBorrow) {
-      afterBorrow();
-    }
+    const data = await apiRequest("/api/books/" + bookId + "/borrow/", "POST");
+    showMessage(data.message, false);
+    refreshPage();
   } catch (err) {
     if (err.status === 401) {
-      showAlert("Sign in first.", "danger", { href: "login.html", text: "Sign in" });
+      showMessage("Sign in first.", true, "Sign in", "login.html");
     } else {
-      showAlert(err.message);
+      showMessage(err.message, true);
     }
   }
   button.disabled = false;
-}
-
-// One book card, a direct item of the .book-grid (CSS Grid).
-// The card itself is a Flexbox column (see .book-card in style.css):
-// cover, optional "Bestseller" badge, title, author, Borrow button at the bottom.
-function createBookCard(book, options) {
-  const settings = options || {};
-  const link = "book.html?id=" + book.id;
-
-  const coverLink = el("a", { href: link, tabindex: "-1", "aria-hidden": "true" }, [
-    createCover(book, "M", "object-fit-cover book-card-cover")
-  ]);
-  let cover = coverLink;
-  if (settings.showBadge && book.is_bestseller) {
-    cover = el("div", { className: "position-relative" }, [
-      coverLink,
-      el("span", { className: "badge bg-danger book-card-badge", text: "Bestseller" })
-    ]);
-  }
-
-  return el("article", { className: "book-card" }, [
-    cover,
-    el("h3", { className: "book-card-title" }, [el("a", { href: link, text: book.title })]),
-    el("p", { className: "book-card-author", text: book.authors.join(", ") }),
-    createBorrowButton(book, settings.afterBorrow, "btn btn-danger book-card-action")
-  ]);
 }
