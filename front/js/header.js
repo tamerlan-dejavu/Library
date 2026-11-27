@@ -9,19 +9,21 @@ const MENU = [
   { page: "about", text: "About", href: "about.html" }
 ];
 
-// Logo image as a link to the home page
+// Logo image as a link to the home page. The bars are dark in every theme,
+// so data-logo="on-dark" makes theme.js always use the light mark here.
 function makeLogo() {
   return el("a", { href: "index.html", "aria-label": "Book Catalog home" }, [
-    el("img", { src: "assets/logo.png", alt: "Book Catalog logo", height: "40", width: "40" })
+    el("img", { src: "assets/logo-paper.png", "data-logo": "on-dark", alt: "Book Catalog logo",
+                height: "40", width: "40" })
   ]);
 }
 
-// Dark top bar: logo on the left, account links on the right
+// Dark top bar: logo on the left, account links on the right (Flexbox in style.css)
 function makeTopBar() {
   return el("header", { className: "bg-dark py-2" }, [
-    el("div", { className: "container-fluid px-4 d-flex justify-content-between align-items-center" }, [
+    el("div", { className: "container-fluid px-4 site-top-inner" }, [
       makeLogo(),
-      el("div", { id: "account", className: "d-flex align-items-center gap-3" })
+      el("div", { id: "account", className: "site-account" })
     ])
   ]);
 }
@@ -53,19 +55,18 @@ function makeMenuBar() {
     items.push(el("li", { className: "nav-item" }, [link]));
   }
 
-  const search = el("form", { action: "catalog.html", method: "get",
-                              className: "d-flex flex-grow-1 flex-md-grow-0", role: "search" }, [
+  const search = el("form", { action: "catalog.html", method: "get", role: "search" }, [
     el("input", { type: "search", name: "q", placeholder: "Find your next favorite book...",
                   className: "form-control form-control-sm", "aria-label": "Search" })
   ]);
 
+  // navbar-nav / nav-link give the Bootstrap link colours; the layout
+  // (row, or a column on phones) comes from .site-menu-* in style.css
   return el("div", { className: "sticky-top" }, [
     el("nav", { className: "navbar navbar-expand navbar-dark bg-brand", "aria-label": "Main" }, [
-      el("div", { className: "container-fluid px-4 flex-wrap gap-2" }, [
-        el("ul", { className: "navbar-nav flex-wrap gap-3 me-auto" }, items),
-        el("div", { className: "d-flex align-items-center gap-2 flex-grow-1 flex-md-grow-0" }, [
-          makeThemeSwitch(), search
-        ])
+      el("div", { className: "container-fluid px-4 site-menu-inner" }, [
+        el("ul", { className: "navbar-nav site-menu-links" }, items),
+        el("div", { className: "site-tools" }, [makeThemeSwitch(), search])
       ])
     ])
   ]);
@@ -75,13 +76,13 @@ function makeMenuBar() {
 function makeFooter() {
   return el("footer", { className: "bg-dark text-white mt-4" }, [
     el("div", { className: "container-fluid px-4 py-4" }, [
-      el("div", { className: "row g-3" }, [
-        el("div", { className: "col-md-6" }, [
+      el("div", { className: "site-footer-inner" }, [
+        el("div", { className: "site-footer-about" }, [
           makeLogo(),
           el("p", { className: "mt-2 mb-0", text: "Discover, borrow and read your favorite books online." }),
           el("p", { className: "mt-4 mb-0", text: "Created by Bauyrzhan Tamerlan" })
         ]),
-        el("div", { className: "col-md-6 text-md-end" }, [
+        el("div", { className: "site-footer-links" }, [
           el("p", {}, [
             el("a", { href: "about.html#privacy", className: "text-white me-2", text: "Privacy Policy" }),
             el("a", { href: "about.html#faq", className: "text-white", text: "Help & FAQ" })

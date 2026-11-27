@@ -66,6 +66,15 @@ function applyDisplay() {
   // Bootstrap sizes everything in rem, so the whole page scales with this
   root.style.fontSize = currentSize() + "px";
 
+  // Logos: <img data-logo="on-dark"> sits on a dark bar (header, footer,
+  // burgundy panel) and always uses the light mark; <img data-logo="auto">
+  // sits on the page background, so it follows the theme
+  const logos = document.querySelectorAll("img[data-logo]");
+  for (let i = 0; i < logos.length; i++) {
+    const onDark = logos[i].dataset.logo === "on-dark" || theme === "night";
+    logos[i].src = onDark ? "assets/logo-paper.png" : "assets/logo-ink.png";
+  }
+
   markPressed("[data-theme-button]", "themeButton", theme);
   markPressed("[data-font-button]", "fontButton", currentFont());
   const sizeLabels = document.querySelectorAll("[data-size-label]");

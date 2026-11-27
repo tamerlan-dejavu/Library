@@ -40,16 +40,15 @@ function loanStatus(loan) {
   return ["Borrowed", "bg-dark"];
 }
 
-// One card in the style of the reference review cards
+// One card in the style of the reference review cards; the cards sit in a
+// .profile-list (Flexbox column with even gaps, see style.css)
 function profileCard(children) {
-  return el("div", { className: "col-12" }, [
-    el("article", { className: "card card-body h-100 bg-secondary-subtle border-0 border-top border-3 border-danger" }, children)
-  ]);
+  return el("article", { className: "card card-body bg-secondary-subtle border-0 border-top border-3 border-danger" }, children);
 }
 
 // Title (link to the book page) on the left, date on the right
 function cardHead(bookId, title, right) {
-  return el("div", { className: "d-flex flex-wrap justify-content-between gap-2 mb-1" }, [
+  return el("div", { className: "review-meta mb-1" }, [
     el("a", { href: "book.html?id=" + bookId, className: "fw-bold link-body-emphasis text-decoration-none", text: title }),
     right
   ]);
