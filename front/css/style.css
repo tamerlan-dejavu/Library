@@ -339,53 +339,8 @@ button:focus-visible,
 
 
 /* ==========================================================
-   Home page: "Reading mood" hero and "About this project"
+   Home page: "About this project"
    ========================================================== */
-
-/* js/index.js sets these variables on the hero section */
-.hero-mood {
-  --mood-accent: #873D35;
-  --mood-accent-night: #A04A40;
-  --mood-heading-font: "Cormorant Garamond", serif;
-  --mood-title-size: 3rem;
-  border-bottom: 3px solid var(--mood-accent);
-}
-/* In the dark theme the lighter accent is used */
-[data-theme="night"] .hero-mood { border-bottom-color: var(--mood-accent-night); }
-
-.hero-mood h1 {
-  font-family: var(--mood-heading-font);
-  font-size: var(--mood-title-size);
-  font-weight: 600;
-}
-
-/* Start Borrow in the colour of the mood (white text >= 4.5:1 on every accent) */
-.btn-mood {
-  --bs-btn-color: #fff;
-  --bs-btn-bg: var(--mood-accent);
-  --bs-btn-border-color: var(--mood-accent);
-  --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: var(--mood-accent);
-  --bs-btn-hover-border-color: var(--mood-accent);
-  --bs-btn-active-bg: var(--mood-accent);
-}
-[data-theme="night"] .btn-mood {
-  --bs-btn-bg: var(--mood-accent-night);
-  --bs-btn-border-color: var(--mood-accent-night);
-  --bs-btn-hover-bg: var(--mood-accent-night);
-  --bs-btn-hover-border-color: var(--mood-accent-night);
-  --bs-btn-active-bg: var(--mood-accent-night);
-}
-.btn-mood:hover { filter: brightness(0.9); }
-
-/* Picture of the mood: softened colours, plain in the contrast theme */
-.mood-image {
-  width: 220px;
-  height: 120px;
-  object-fit: cover;
-  filter: grayscale(0.4) sepia(0.3);
-}
-[data-theme="contrast"] .mood-image { filter: none; }
 
 /* "About this project": two columns on CSS Grid, one on phones */
 .project-info {
@@ -395,4 +350,54 @@ button:focus-visible,
 }
 @media (max-width: 767px) {
   .project-info { grid-template-columns: 1fr; }
+}
+
+
+/* ==========================================================
+   Catalog shelves. js/catalog.js puts data-shelf and the variables
+   --shelf-accent, --shelf-heading-font, --shelf-title-size on
+   .catalog-results. Without a shelf nothing here changes the page.
+   ========================================================== */
+
+/* Banner: picture on the left, text on the right, accent stripe */
+.shelf-banner {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  border-left: 6px solid var(--shelf-accent);
+}
+.shelf-image {
+  width: 220px;
+  height: 120px;
+  object-fit: cover;
+  filter: grayscale(0.5);
+}
+[data-theme="contrast"] .shelf-image { filter: none; }
+.shelf-title {
+  font-family: var(--shelf-heading-font);
+  font-size: var(--shelf-title-size);
+  font-weight: 600;
+}
+
+/* Inside a shelf: card stripes, Borrow buttons and the active shelf button
+   take the shelf colour (white text >= 4.5:1 on every accent) */
+.catalog-results[data-shelf] .book-card { border-top-color: var(--shelf-accent); }
+.catalog-results[data-shelf] .book-card-action,
+.catalog-results[data-shelf] .shelf-button[aria-pressed="true"] {
+  --bs-btn-bg: var(--shelf-accent);
+  --bs-btn-border-color: var(--shelf-accent);
+  --bs-btn-color: #fff;
+  --bs-btn-hover-bg: var(--shelf-accent);
+  --bs-btn-hover-border-color: var(--shelf-accent);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-active-bg: var(--shelf-accent);
+  background-color: var(--shelf-accent);
+  border-color: var(--shelf-accent);
+  color: #fff;
+}
+
+/* Phones: the picture goes above the text */
+@media (max-width: 575px) {
+  .shelf-banner { flex-direction: column; align-items: flex-start; }
 }
