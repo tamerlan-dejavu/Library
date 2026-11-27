@@ -336,3 +336,63 @@ button:focus-visible,
   .alert-area { display: none !important; }
   .book-card { box-shadow: none; border: 1px solid #000; }
 }
+
+
+/* ==========================================================
+   Home page: "Reading mood" hero and "About this project"
+   ========================================================== */
+
+/* js/index.js sets these variables on the hero section */
+.hero-mood {
+  --mood-accent: #873D35;
+  --mood-accent-night: #A04A40;
+  --mood-heading-font: "Cormorant Garamond", serif;
+  --mood-title-size: 3rem;
+  border-bottom: 3px solid var(--mood-accent);
+}
+/* In the dark theme the lighter accent is used */
+[data-theme="night"] .hero-mood { border-bottom-color: var(--mood-accent-night); }
+
+.hero-mood h1 {
+  font-family: var(--mood-heading-font);
+  font-size: var(--mood-title-size);
+  font-weight: 600;
+}
+
+/* Start Borrow in the colour of the mood (white text >= 4.5:1 on every accent) */
+.btn-mood {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--mood-accent);
+  --bs-btn-border-color: var(--mood-accent);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--mood-accent);
+  --bs-btn-hover-border-color: var(--mood-accent);
+  --bs-btn-active-bg: var(--mood-accent);
+}
+[data-theme="night"] .btn-mood {
+  --bs-btn-bg: var(--mood-accent-night);
+  --bs-btn-border-color: var(--mood-accent-night);
+  --bs-btn-hover-bg: var(--mood-accent-night);
+  --bs-btn-hover-border-color: var(--mood-accent-night);
+  --bs-btn-active-bg: var(--mood-accent-night);
+}
+.btn-mood:hover { filter: brightness(0.9); }
+
+/* Picture of the mood: softened colours, plain in the contrast theme */
+.mood-image {
+  width: 220px;
+  height: 120px;
+  object-fit: cover;
+  filter: grayscale(0.4) sepia(0.3);
+}
+[data-theme="contrast"] .mood-image { filter: none; }
+
+/* "About this project": two columns on CSS Grid, one on phones */
+.project-info {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 1.5rem;
+}
+@media (max-width: 767px) {
+  .project-info { grid-template-columns: 1fr; }
+}
