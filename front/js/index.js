@@ -6,7 +6,8 @@ const GENRE_ICONS = {
   "non-fiction": "assets/icon-non-fiction.png",
   "sci-fi": "assets/icon-sci-fi.png",
   "biography": "assets/icon-biography.png",
-  "fantasy": "assets/icon-novel.png"
+  "fantasy": "assets/icon-novel.png",
+  "mystery": "assets/icon-mystery.png"
 };
 
 // First 5 books with is_bestseller from the API
