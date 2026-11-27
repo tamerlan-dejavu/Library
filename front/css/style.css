@@ -327,8 +327,9 @@ button:focus-visible,
 
 /* (d2) Printing: only the content, without header, footer and buttons */
 @media print {
-  #siteHeader,
-  #siteFooter,
+  body > header,
+  body > .sticky-top,
+  body > footer,
   .btn,
   .catalog-filters,
   .pagination,
