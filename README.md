@@ -76,7 +76,8 @@ DATABASE_URL="$(grep '^ADMIN_DATABASE_URL=' ../.env | cut -d= -f2-)" python mana
 python db/run_sql.py db/schema.sql       # 1. tables (drops them first!)
 python db/run_sql.py db/seed.sql         # 2. demo data
 python db/run_sql.py db/procedures.sql   # 3. stored functions
-python db/run_sql.py db/security.sql     # 4. role library_app (needs APP_DB_PASSWORD)
+python db/run_sql.py db/post_seed_covers.sql  # 4. five bestsellers with covers (front/covers/)
+python db/run_sql.py db/security.sql     # 5. role library_app (needs APP_DB_PASSWORD), always last
 python db/check_app_user.py              # check the rights of library_app
 python manage.py import_books            # optional: extra books from Open Library
 python manage.py createsuperuser         # login for /admin/
@@ -124,6 +125,7 @@ python db/run_sql.py db/call_functions.sql --out ../docs/sql_results/functions.t
 | `generate_seed.py`   | Writes `seed.sql` (fixed random seed, no network)                     |
 | `seed.sql`           | Demo data: 143 real books, 134 authors, 125 members, 180 loans, ...   |
 | `procedures.sql`     | Three PL/pgSQL functions (above-average books, overdue members, unborrowed books) |
+| `post_seed_covers.sql` | Five sample bestsellers with covers `front/covers/<book_id>.jpg` (found by title) |
 | `security.sql`       | Role `library_app`, grants, row level security policies              |
 | `structure.sql`      | Report: columns, constraints, row counts and indexes of the 11 tables |
 | `queries.sql`        | Demonstration queries: joins, aggregates, subqueries                  |

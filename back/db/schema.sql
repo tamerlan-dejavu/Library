@@ -1,7 +1,7 @@
 -- ======================================================================
 -- Book Catalog schema (PostgreSQL)
 -- Run order: python manage.py migrate -> schema.sql -> seed.sql
---            -> procedures.sql -> security.sql
+--            -> procedures.sql -> post_seed_covers.sql -> security.sql
 --
 -- How the ER model maps to these tables
 -- ----------------------------------------------------------------------
