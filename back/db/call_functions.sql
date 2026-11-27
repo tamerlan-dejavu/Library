@@ -1,3 +1,4 @@
+-- Run order: any time after step 4 (schema -> seed -> procedures -> security -> post_seed_covers); queries.sql, structure.sql and call_functions.sql can run any time after step 4
 -- Calls each stored function from procedures.sql once.
 -- Run: python db/run_sql.py db/call_functions.sql --out ../docs/sql_results/functions.txt
 
