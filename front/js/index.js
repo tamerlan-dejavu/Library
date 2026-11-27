@@ -10,60 +10,73 @@ const GENRE_ICONS = {
   "mystery": "assets/icon-mystery.png"
 };
 
-// First 5 books with is_bestseller from the API
+// Loads the first 5 bestsellers (books with a cover come first)
 async function loadBestsellers() {
   const grid = document.getElementById("bestsellers");
   let data;
   try {
-    data = await apiGet("/api/books/?bestseller=1");
+    data = await apiRequest("/api/books/?bestseller=1", "GET");
   } catch (err) {
     grid.textContent = "";
-    showAlert("Could not load bestsellers. " + err.message);
+    showMessage("Could not load bestsellers. " + err.message, true);
     return;
   }
 
   grid.textContent = "";
-  const books = data.books.slice(0, 5);
-  if (books.length === 0) {
-    grid.appendChild(el("p", { text: "No bestsellers yet." }));
+  if (data.books.length === 0) {
+    grid.textContent = "No bestsellers yet.";
   }
-  for (let i = 0; i < books.length; i++) {
-    grid.appendChild(createBookCard(books[i], { afterBorrow: loadBestsellers }));
+  for (let i = 0; i < data.books.length && i < 5; i++) {
+    grid.appendChild(makeBookCard(data.books[i], false));
   }
 }
 
-// One tile per genre from the database (picture or letter, name, count)
+// One tile per genre from the database: picture or letter, name, count
 async function loadCategories() {
   const box = document.getElementById("categories");
   let data;
   try {
-    data = await apiGet("/api/filters/");
+    data = await apiRequest("/api/filters/", "GET");
   } catch (err) {
     box.textContent = "";
-    showAlert("Could not load the genres. " + err.message);
+    showMessage("Could not load the genres. " + err.message, true);
     return;
   }
 
   box.textContent = "";
   if (data.genres.length === 0) {
-    box.appendChild(el("p", { text: "No genres yet." }));
+    box.textContent = "No genres yet.";
   }
   for (let i = 0; i < data.genres.length; i++) {
-    const genre = data.genres[i];
-    const icon = GENRE_ICONS[genre.name.toLowerCase()];
-    const picture = icon
-      ? el("img", { src: icon, alt: "", className: "w-100 object-fit-cover mb-2" })
-      : el("span", { className: "d-block category-letter mb-2", "aria-hidden": "true", text: genre.name.charAt(0) });
-    const books = genre.count === 1 ? "1 book" : genre.count + " books";
-
-    // The tile is a direct item of the .category-grid (CSS Grid)
-    box.appendChild(el("a", { href: "catalog.html?genre=" + genre.id,
-                              className: "d-block bg-secondary-subtle text-body text-decoration-none text-center p-3 category-tile" }, [
-      picture,
-      el("p", { className: "mb-0", text: genre.name }),
-      el("p", { className: "mb-0 small text-body-secondary", text: books })
-    ]));
+    box.appendChild(makeCategoryTile(data.genres[i]));
   }
+}
+
+// Makes one tile from <template id="categoryTemplate">
+function makeCategoryTile(genre) {
+  const tile = document.getElementById("categoryTemplate").content.firstElementChild.cloneNode(true);
+  const icon = GENRE_ICONS[genre.name.toLowerCase()];
+
+  tile.href = "catalog.html?genre=" + genre.id;
+  if (icon) {
+    tile.querySelector(".category-icon").src = icon;
+    tile.querySelector(".category-letter").remove();
+  } else {
+    tile.querySelector(".category-icon").remove();
+    tile.querySelector(".category-letter").textContent = genre.name.charAt(0);
+  }
+  tile.querySelector(".category-name").textContent = genre.name;
+  if (genre.count === 1) {
+    tile.querySelector(".category-count").textContent = "1 book";
+  } else {
+    tile.querySelector(".category-count").textContent = genre.count + " books";
+  }
+  return tile;
+}
+
+// After Borrow: load the bestsellers again (called from books.js)
+function refreshPage() {
+  loadBestsellers();
 }
 
 loadBestsellers();
