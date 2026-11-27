@@ -220,6 +220,88 @@ class ApiTests(CatalogTestData):
         r = self.client.post("/api/me/")
         self.assertEqual(r.status_code, 405)
 
+    # --- GET /api/filters/ ---
+    def test_filters(self):
+        r = self.client.get("/api/filters/")
+        self.assertEqual(r.status_code, 200)
+        data = r.json()
+        genres = {g["name"]: g for g in data["genres"]}
+        self.assertEqual(genres["Test Genre Alpha"]["count"], 2)
+        self.assertEqual(genres["Test Genre Alpha"]["id"], self.alpha.category_id)
+        self.assertEqual(genres["Test Genre Beta"]["count"], 1)
+        self.assertLessEqual(data["year_min"], 1950)   # book1 is from 1950
+        self.assertGreaterEqual(data["year_max"], 2010)
+
+    def test_filters_wrong_method(self):
+        self.assertEqual(self.client.post("/api/filters/").status_code, 405)
+
+    def test_books_filter_by_several_genre_ids(self):
+        url = f"/api/books/?genre={self.alpha.category_id}&genre={self.beta.category_id}&q={TAG}"
+        titles = {b["title"] for b in self.client.get(url).json()["books"]}
+        self.assertEqual(titles, {f"{TAG} Book One", f"{TAG} Book Two", f"{TAG} Book Three"})
+        # one id -> only that genre
+        url = f"/api/books/?genre={self.beta.category_id}&q={TAG}"
+        self.assertEqual([b["title"] for b in self.client.get(url).json()["books"]], [f"{TAG} Book Two"])
+
+    # --- PATCH /api/me/ ---
+    def patch_me(self, data):
+        return self.client.patch("/api/me/", json.dumps(data), content_type="application/json")
+
+    def test_patch_me_updates_names_and_phones(self):
+        MemberPhone.objects.create(member=self.member, phone="+77010000009")
+        self.log_in()
+        r = self.patch_me({"first_name": " Әлия ", "last_name": "Нұрғалиева",
+                           "phones": ["+77011234567", "+7 701 765 4321", ""]})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json()["phones"], ["+77011234567", "+77017654321"])
+        self.member.refresh_from_db()
+        self.user.refresh_from_db()
+        self.assertEqual((self.member.first_name, self.member.last_name), ("Әлия", "Нұрғалиева"))
+        self.assertEqual((self.user.first_name, self.user.last_name), ("Әлия", "Нұрғалиева"))
+        # the old phone was replaced, e-mail and birth year stay the same
+        self.assertFalse(MemberPhone.objects.filter(phone="+77010000009").exists())
+        self.assertEqual((self.member.email, self.member.birth_year), ("zzqx.reader@example.com", 2000))
+
+    def test_patch_me_cannot_change_email_or_birth_year(self):
+        self.log_in()
+        r = self.patch_me({"first_name": "Алихан", "last_name": "Бекұлы", "phones": [],
+                           "email": "zzqx.hacker@example.com", "birth_year": 1950})
+        self.assertEqual(r.status_code, 200)
+        self.member.refresh_from_db()
+        self.assertEqual((self.member.email, self.member.birth_year), ("zzqx.reader@example.com", 2000))
+
+    def test_patch_me_validation(self):
+        self.log_in()
+        cases = [
+            ({"first_name": "A", "last_name": "Бекұлы", "phones": []}, "first_name"),
+            ({"first_name": "Алихан", "last_name": "B4d", "phones": []}, "last_name"),
+            ({"first_name": "Алихан", "last_name": "Бекұлы", "phones": ["12-34"]}, "phones"),
+            ({"first_name": "Алихан", "last_name": "Бекұлы", "phones": ["+77011234567"] * 2}, "phones"),
+            ({"first_name": "Алихан", "last_name": "Бекұлы",
+              "phones": [f"+7701123456{i}" for i in range(6)]}, "phones"),
+        ]
+        for data, field in cases:
+            r = self.patch_me(data)
+            self.assertEqual(r.status_code, 400, data)
+            self.assertEqual(r.json()["field"], field)
+        # nothing was saved
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.first_name, "Алихан")
+        self.assertEqual(MemberPhone.objects.filter(member=self.member).count(), 0)
+
+    def test_patch_me_does_not_touch_other_members(self):
+        MemberPhone.objects.create(member=self.other1, phone="+77019990000")
+        self.log_in()
+        self.patch_me({"first_name": "Новое", "last_name": "Имя", "phones": ["+77019990000"]})
+        self.other1.refresh_from_db()
+        self.assertEqual((self.other1.first_name, self.other1.last_name), ("Zzqx", "Other One"))
+        # the other member keeps the phone; the same number may belong to two people
+        self.assertTrue(MemberPhone.objects.filter(member=self.other1, phone="+77019990000").exists())
+
+    def test_patch_me_needs_login(self):
+        r = self.patch_me({"first_name": "Алихан", "last_name": "Бекұлы", "phones": []})
+        self.assertEqual(r.status_code, 401)
+
     # --- POST /api/books/<id>/reviews/ ---
     def test_add_review(self):
         self.log_in()

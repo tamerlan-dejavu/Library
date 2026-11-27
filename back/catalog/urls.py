@@ -8,6 +8,7 @@ urlpatterns = [
     path("books/<int:book_id>/", views.book_detail),
     path("books/<int:book_id>/reviews/", views.add_review),
     path("books/<int:book_id>/borrow/", views.borrow),
+    path("filters/", views.filters),
     path("register/", views.register),
     path("login/", views.login_view),
     path("logout/", views.logout_view),

@@ -21,9 +21,12 @@ function showOpenLibraryMessage(text) {
 
 // Adds a "label: value" line to the Open Library facts
 function addOpenLibraryFact(list, label, value) {
+  // Bootstrap grid: label on the left, value on the right
   const dt = document.createElement("dt");
+  dt.className = "col-sm-5 fw-semibold";
   dt.textContent = label;
   const dd = document.createElement("dd");
+  dd.className = "col-sm-7 mb-1";
   dd.textContent = value;
   list.appendChild(dt);
   list.appendChild(dd);

@@ -21,3 +21,9 @@ async function loginUser() {
 
   location.href = "profile.html";
 }
+
+// Connect the form (no inline onsubmit in the HTML)
+document.getElementById("loginForm").addEventListener("submit", function (event) {
+  event.preventDefault();   // stay on the page; we send the data with fetch
+  loginUser();
+});

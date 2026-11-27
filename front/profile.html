@@ -3,93 +3,95 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Profile - Book Catalog</title>
+  <title>Profile</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
   <link rel="icon" type="image/png" href="assets/logo.png">
   <script src="js/theme.js"></script>
 </head>
-<body class="d-flex flex-column min-vh-100">
+<body class="bg-body-tertiary d-flex flex-column min-vh-100" data-page="profile">
 
-<header class="site-header">
-  <div class="container header-bar">
-    <a href="index.html" class="brand">Book Catalog</a>
-    <div id="account" class="account"></div>
-  </div>
-</header>
-
-<nav class="site-nav" aria-label="Main">
-  <div class="container nav-bar">
-    <ul class="nav-links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="catalog.html">Catalog</a></li>
-      <li><a href="profile.html" class="active" aria-current="page">Profile</a></li>
-      <li><a href="about.html">About</a></li>
-    </ul>
-    <form action="catalog.html" method="get" class="nav-search" role="search">
-      <input type="search" name="q" class="form-control form-control-sm" placeholder="Search by title or author" aria-label="Search books">
-    </form>
-  </div>
-</nav>
-
-<div id="alertArea" class="alert-area" aria-live="polite"></div>
+<div id="siteHeader"></div>
 
 <main class="container flex-grow-1">
 
-  <section id="signedOut" class="form-page d-none">
-    <h1 class="mb-3">Please sign in</h1>
-    <p class="text-muted-ink">Your profile shows the books you borrowed and the reviews you wrote.</p>
-    <p><a href="login.html" class="btn btn-primary">Sign in</a> <a href="register.html" class="btn btn-outline-secondary ms-2">Create account</a></p>
-  </section>
+  <div id="profileArea" class="d-none">
+    <article class="pt-4">
+      <div class="row g-4">
+        <div class="col-md-auto">
+          <div class="position-relative d-inline-block">
+            <img src="assets/profile-placeholder.svg" alt="Profile icon" class="d-block object-fit-cover border border-2 border-danger bg-secondary-subtle profile-picture" width="220" height="300">
+            <span class="badge bg-dark position-absolute bottom-0 end-0 m-2">Adult reader (18+)</span>
+          </div>
+        </div>
 
-  <div id="signedIn" class="d-none">
-    <div class="pt-5 pb-4">
-      <p class="eyebrow">My profile</p>
-      <h1 id="profileName"></h1>
-      <p id="profileEmail" class="text-muted-ink mb-0"></p>
-    </div>
+        <div class="col-md">
+          <h1 id="profileName"></h1>
+          <form id="profileForm" novalidate>
+            <!-- Shown only in edit mode -->
+            <div id="nameEdit" class="row g-3 mb-3 d-none">
+              <div class="col-sm-6">
+                <label for="firstName" class="form-label mb-1">First name</label>
+                <input type="text" id="firstName" class="form-control" autocomplete="given-name" aria-describedby="firstNameError">
+                <div id="firstNameError" class="invalid-feedback"></div>
+              </div>
+              <div class="col-sm-6">
+                <label for="lastName" class="form-label mb-1">Last name</label>
+                <input type="text" id="lastName" class="form-control" autocomplete="family-name" aria-describedby="lastNameError">
+                <div id="lastNameError" class="invalid-feedback"></div>
+              </div>
+            </div>
 
-    <section class="section">
-      <h2 class="mb-3">My loans</h2>
-      <p id="noLoans" class="text-muted-ink d-none">You have not borrowed any books yet. <a href="catalog.html">Find one in the catalog.</a></p>
-      <div class="table-responsive">
-        <table class="table">
-          <thead>
-            <tr><th>Title</th><th>Loan date</th><th>Due date</th><th>Returned</th></tr>
-          </thead>
-          <tbody id="loanRows"></tbody>
-        </table>
+            <span id="emailLabel" class="form-label d-block mb-1">Email-address</span>
+            <p id="profileEmail" class="bg-secondary-subtle p-2 mb-3" aria-labelledby="emailLabel"></p>
+
+            <span id="phoneLabel" class="form-label d-block mb-1">Phone number</span>
+            <div id="phoneList" class="mb-3" aria-labelledby="phoneLabel"></div>
+            <div id="phoneEdit" class="mb-3 d-none">
+              <div id="phoneRows"></div>
+              <button type="button" id="addPhone" class="btn btn-outline-danger btn-sm">Add phone</button>
+              <div id="phonesError" class="invalid-feedback d-block" role="alert"></div>
+            </div>
+
+            <fieldset class="mb-2">
+              <legend class="fs-6 mb-1">Birth year</legend>
+              <p id="profileBirthYear" class="d-inline-block bg-secondary-subtle px-3 py-2 mb-0"></p>
+            </fieldset>
+
+            <div id="profileError" class="alert alert-danger mt-3 d-none" role="alert"></div>
+            <div id="profileSuccess" class="alert alert-success mt-3 d-none" role="status"></div>
+
+            <button type="button" id="editButton" class="btn btn-danger mt-2">Change profile</button>
+            <span id="editButtons" class="d-none">
+              <button type="submit" class="btn btn-danger mt-2">Save</button>
+              <button type="button" id="cancelButton" class="btn btn-outline-secondary mt-2 ms-2">Cancel</button>
+            </span>
+          </form>
+        </div>
       </div>
+    </article>
+
+    <section class="py-4" aria-labelledby="myBooksTitle">
+      <h2 id="myBooksTitle" class="mb-3">My books</h2>
+      <p id="noBooks" class="d-none">You have not borrowed any books yet. <a href="catalog.html" class="text-danger">Find one in the catalog.</a></p>
+      <div id="bookRows" class="row g-3"></div>
     </section>
 
-    <section class="section">
-      <h2 class="mb-3">My reviews</h2>
-      <p id="noReviews" class="text-muted-ink d-none">You have not written any reviews yet.</p>
-      <ul id="reviewList" class="list-unstyled mb-0"></ul>
+    <section class="py-4" aria-labelledby="myReviewsTitle">
+      <h2 id="myReviewsTitle" class="mb-3">My reviews</h2>
+      <p id="noReviews" class="d-none">You have not written any reviews yet. <a href="catalog.html" class="text-danger">Find a book to review.</a></p>
+      <div id="myReviewList" class="row g-3"></div>
     </section>
   </div>
 
 </main>
 
-<footer class="site-footer">
-  <div class="container footer-bar">
-    <div>
-      <p class="brand mb-1">Book Catalog</p>
-      <p class="text-muted-ink mb-0">Discover, borrow and read your favorite books.</p>
-      <p class="small text-muted-ink mt-3 mb-0">Created by Bauyrzhan Tamerlan</p>
-    </div>
-    <div>
-      <p class="mb-1"><a href="catalog.html">Browse the catalog</a></p>
-      <p class="mb-0"><a href="about.html">About &amp; contact</a></p>
-    </div>
-  </div>
-</footer>
+<div id="siteFooter"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 <script src="js/api.js"></script>
 <script src="js/header.js"></script>
+<script src="js/books.js"></script>
 <script src="js/profile.js"></script>
 </body>
 </html>
