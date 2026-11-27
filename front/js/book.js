@@ -34,7 +34,7 @@ function renderReviews(reviews) {
     list.appendChild(el("article", {
       className: "card card-body bg-secondary-subtle border-0 border-top border-3 border-danger mb-3"
     }, [
-      el("div", { className: "d-flex justify-content-between fw-bold mb-1" }, [
+      el("div", { className: "review-meta fw-bold mb-1" }, [
         el("span", { text: r.author || "Reader" }),
         el("span", { text: shortDate(r.created_at) })
       ]),

@@ -147,3 +147,191 @@ button:focus-visible,
   --bs-btn-bg: #a71d2a;
   --bs-btn-border-color: #a71d2a;
 }
+
+
+/* ==========================================================
+   Our own layout (FWT): Flexbox, CSS Grid and media queries.
+   Bootstrap is still used for forms, buttons and spacing, but
+   the header, footer, book grids, cards and catalog layout
+   below are controlled by these classes.
+   ========================================================== */
+
+/* ---------- Flexbox: header ---------- */
+/* Top bar: logo on the left, account links on the right */
+.site-top-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+.site-account {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+/* Menu bar: links on the left, theme switch + search on the right */
+.site-menu-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+}
+.navbar .site-menu-links {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  margin: 0 auto 0 0;
+  padding: 0;
+  list-style: none;
+}
+.site-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.site-tools form { display: flex; flex: 1; }
+
+/* ---------- Flexbox: footer ---------- */
+/* About text on the left, links on the right; they wrap on small screens */
+.site-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+.site-footer-links { text-align: right; }
+
+/* ---------- CSS Grid: book grids ---------- */
+/* Catalog: 4 equal columns; bestsellers on Home: 5 columns */
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+.book-grid-bestsellers { grid-template-columns: repeat(5, 1fr); }
+/* Grid items may shrink below their content (long titles) */
+.book-grid > * { min-width: 0; }
+
+/* ---------- Flexbox: book card ---------- */
+/* Column layout; margin-top: auto pushes the Borrow button to the bottom,
+   so all buttons in a row line up even when titles have different lengths */
+.book-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1rem;
+  background: var(--bs-body-bg);
+  border-top: 3px solid var(--bs-danger);
+  border-radius: var(--bs-border-radius);
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.book-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+}
+.book-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+  overflow-wrap: anywhere;      /* long Kazakh or English words break */
+}
+.book-card-title a { color: var(--bs-emphasis-color); text-decoration: none; }
+.book-card-title a:hover { text-decoration: underline; }
+.book-card-author { margin-bottom: 1rem; overflow-wrap: anywhere; }
+.book-card-action { margin-top: auto; width: 100%; }
+.book-card-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(25%, -50%);
+}
+
+/* ---------- CSS Grid: category tiles ---------- */
+/* As many columns as fit, each at least 150 px wide */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+/* ---------- Flexbox: reviews and profile lists ---------- */
+/* "author ... date" line of a review card; wraps on narrow screens */
+.review-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+/* Cards of "My books" / "My reviews" stacked with even gaps */
+.profile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.form-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ---------- Flexbox: catalog page (sidebar + results) ---------- */
+.catalog-layout { display: flex; }
+.catalog-filters { flex: 0 0 260px; }
+.catalog-results { flex: 1; min-width: 0; }
+
+/* ==========================================================
+   Media queries
+   ========================================================== */
+
+/* (a) Book grids by screen width: 4 (5) -> 3 -> 2 -> 1 columns */
+@media (max-width: 1199px) {
+  .book-grid,
+  .book-grid-bestsellers { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 991px) {
+  .book-grid,
+  .book-grid-bestsellers { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 575px) {
+  .book-grid,
+  .book-grid-bestsellers { grid-template-columns: 1fr; }
+}
+
+/* (b) Catalog: the filter sidebar becomes a full-width block under the grid */
+@media (max-width: 991px) {
+  .catalog-layout { flex-direction: column; }
+  .catalog-filters {
+    order: 2;                    /* after the results */
+    flex-basis: auto;
+    width: 100%;
+  }
+}
+
+/* (c) Header on phones: menu links in a column, search on its own full row */
+@media (max-width: 767px) {
+  .navbar .site-menu-links {
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+  }
+  .site-tools { width: 100%; }
+  .site-footer-links { text-align: left; }
+}
+
+/* (d1) Users who ask for less motion: no hover lift animation */
+@media (prefers-reduced-motion: reduce) {
+  .book-card { transition: none; }
+  .book-card:hover { transform: none; }
+}
+
+/* (d2) Printing: only the content, without header, footer and buttons */
+@media print {
+  #siteHeader,
+  #siteFooter,
+  .btn,
+  .catalog-filters,
+  .pagination,
+  .alert-area { display: none !important; }
+  .book-card { box-shadow: none; border: 1px solid #000; }
+}

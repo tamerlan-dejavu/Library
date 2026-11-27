@@ -6,7 +6,7 @@
   <title>About</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <link href="css/style.css" rel="stylesheet">
-  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
   <script src="js/theme.js"></script>
 </head>
 <body class="bg-body-tertiary d-flex flex-column min-vh-100" data-page="about">
@@ -20,6 +20,7 @@
     <div class="row justify-content-center">
       <div class="col-md-8 col-lg-6 col-xl-5">
         <div class="border border-2 border-danger bg-secondary-subtle p-4">
+          <img src="assets/logo-ink.png" data-logo="auto" alt="Book Catalog logo" width="64" height="64" class="mb-3">
           <p>Book Catalog is an online library where you can find and borrow books from every genre — fiction, non-fiction, biographies, sci-fi and more.</p>
           <p>Browse the catalog, read reviews from other readers, share your own opinion and keep track of the books you love in your profile.</p>
           <blockquote class="bg-body border-start border-3 border-danger p-3 fst-italic text-start mt-3 mb-0">
@@ -33,33 +34,13 @@
   <div class="row justify-content-center pb-4">
     <div class="col-lg-8">
 
-      <section id="privacy" class="card card-body bg-secondary-subtle border-0 border-top border-3 border-danger mb-3" aria-labelledby="privacyTitle">
-        <h2 id="privacyTitle" class="h4">Privacy Policy</h2>
-        <p class="mb-0">We store only what the library needs: your name, e-mail address, birth year, phone numbers, loans, reservations and reviews. Your password is never stored as text, only as a secure hash, so nobody can read it. We do not sell or give your data to third parties. Other readers see only your first name and the first letter of your last name next to your reviews.</p>
-      </section>
-
-      <section id="faq" class="card card-body bg-secondary-subtle border-0 border-top border-3 border-danger mb-3" aria-labelledby="faqTitle">
-        <h2 id="faqTitle" class="h4">Help &amp; FAQ</h2>
-        <dl class="mb-0">
-          <dt>How do I borrow a book?</dt>
-          <dd>Sign in, open a book and press "Borrow". The book appears in "My books" on your profile.</dd>
-          <dt>How long can I keep a book?</dt>
-          <dd>A loan lasts 14 days. After that the loan is marked as overdue.</dd>
-          <dt>What is a reservation?</dt>
-          <dd>When no copies are free, the button says "Reserve". You join the waiting list for the next free copy.</dd>
-          <dt>How do I leave a review?</dt>
-          <dd class="mb-0">Sign in, open the book page, choose a rating from 1 to 5, write a few words and press "Submit". One review per book.</dd>
-        </dl>
-      </section>
-
-      <section id="contact" class="card card-body bg-secondary-subtle border-0 border-top border-3 border-danger mb-3" aria-labelledby="contactTitle">
-        <h2 id="contactTitle" class="h4">Contact us</h2>
-        <p class="mb-0">Write to <a href="mailto:library@example.com" class="text-danger">library@example.com</a>. We answer within two working days.</p>
-      </section>
-
       <section id="display" class="card card-body bg-secondary-subtle border-0 border-top border-3 border-danger" aria-labelledby="displayTitle">
         <h2 id="displayTitle" class="h4">Display settings</h2>
         <p>Saved in this browser and used on every page.</p>
+        <p class="d-flex align-items-center gap-2">
+          <img src="assets/logo-ink.png" data-logo="auto" alt="" width="32" height="32">
+          <span>The logo changes together with the theme: a dark logo on light backgrounds, a light logo on dark ones.</span>
+        </p>
         <div class="d-flex flex-wrap align-items-center gap-2 mb-3" role="group" aria-labelledby="themeName">
           <span id="themeName" class="fw-bold me-2">Theme</span>
           <button type="button" class="btn btn-outline-danger btn-sm" data-theme-button="paper">Light</button>

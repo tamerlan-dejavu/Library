@@ -87,32 +87,28 @@ async function borrowBook(bookId, button, afterBorrow) {
   button.disabled = false;
 }
 
-// One book card inside a grid column (like the reference cards):
-// cover, optional "Bestseller" badge, title, author, Borrow button
+// One book card, a direct item of the .book-grid (CSS Grid).
+// The card itself is a Flexbox column (see .book-card in style.css):
+// cover, optional "Bestseller" badge, title, author, Borrow button at the bottom.
 function createBookCard(book, options) {
   const settings = options || {};
   const link = "book.html?id=" + book.id;
 
   const coverLink = el("a", { href: link, tabindex: "-1", "aria-hidden": "true" }, [
-    createCover(book, "M", "card-img-top object-fit-cover book-card-cover")
+    createCover(book, "M", "object-fit-cover book-card-cover")
   ]);
   let cover = coverLink;
   if (settings.showBadge && book.is_bestseller) {
     cover = el("div", { className: "position-relative" }, [
       coverLink,
-      el("span", { className: "badge bg-danger position-absolute top-0 start-100 translate-middle", text: "Bestseller" })
+      el("span", { className: "badge bg-danger book-card-badge", text: "Bestseller" })
     ]);
   }
 
-  const card = el("article", { className: "card h-100 border-0 border-top border-3 border-danger shadow-sm" }, [
-    el("div", { className: "card-body d-flex flex-column" }, [
-      cover,
-      el("h3", { className: "card-title fs-6 fw-bold mt-2" }, [
-        el("a", { href: link, className: "link-body-emphasis text-decoration-none", text: book.title })
-      ]),
-      el("p", { className: "card-text", text: book.authors.join(", ") }),
-      createBorrowButton(book, settings.afterBorrow, "btn btn-danger w-100 mt-auto")
-    ])
+  return el("article", { className: "book-card" }, [
+    cover,
+    el("h3", { className: "book-card-title" }, [el("a", { href: link, text: book.title })]),
+    el("p", { className: "book-card-author", text: book.authors.join(", ") }),
+    createBorrowButton(book, settings.afterBorrow, "btn btn-danger book-card-action")
   ]);
-  return el("div", { className: "col" }, [card]);
 }
