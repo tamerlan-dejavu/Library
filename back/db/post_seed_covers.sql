@@ -1,6 +1,7 @@
+-- Run order: 5 of 5 (schema -> seed -> procedures -> security -> post_seed_covers); queries.sql, structure.sql and call_functions.sql can run any time after step 4
 -- ======================================================================
 -- Five sample books with real covers on the Home page (Bestsellers).
--- Run after seed.sql and procedures.sql (security.sql stays the last one):
+-- Run after seed.sql, procedures.sql and security.sql (this file is the last one):
 --     python db/run_sql.py db/post_seed_covers.sql
 -- Safe to run again: nothing is inserted twice, the UPDATE gives the
 -- same result. Books are found by title, not by a fixed book_id.

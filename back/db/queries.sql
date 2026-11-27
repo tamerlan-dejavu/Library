@@ -1,3 +1,4 @@
+-- Run order: any time after step 4 (schema -> seed -> procedures -> security -> post_seed_covers); queries.sql, structure.sql and call_functions.sql can run any time after step 4
 -- ======================================================================
 -- Demonstration queries for the Book Catalog database (read-only)
 -- Run: python db/run_sql.py db/queries.sql --out ../docs/sql_results/queries.txt
