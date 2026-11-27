@@ -1,28 +1,30 @@
 // Login form: POST /api/login/ with email and password, then go to the profile
 
+// Shows a message in the red box under the form
+function showLoginError(message) {
+  document.getElementById("formError").textContent = message;
+  document.getElementById("formError").classList.remove("d-none");
+}
+
 async function loginUser() {
   const email = document.getElementById("email").value.trim().toLowerCase();
   const password = document.getElementById("password").value;
 
-  hideBoxMessage("formError");
-
+  document.getElementById("formError").classList.add("d-none");
   if (email === "" || password === "") {
-    showBoxMessage("formError", "Please enter your email and password.");
+    showLoginError("Please enter your email and password.");
     return;
   }
 
   try {
-    await apiPost("/api/login/", { email: email, password: password });
+    await apiRequest("/api/login/", "POST", { email: email, password: password });
   } catch (err) {
-    // e.g. "Invalid email or password."
-    showBoxMessage("formError", err.message);
+    showLoginError(err.message);   // e.g. "Invalid email or password."
     return;
   }
-
   location.href = "profile.html";
 }
 
-// Connect the form (no inline onsubmit in the HTML)
 document.getElementById("loginForm").addEventListener("submit", function (event) {
   event.preventDefault();   // stay on the page; we send the data with fetch
   loginUser();
