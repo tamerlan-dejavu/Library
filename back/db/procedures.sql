@@ -1,3 +1,4 @@
+-- Run order: 3 of 5 (schema -> seed -> procedures -> security -> post_seed_covers); queries.sql, structure.sql and call_functions.sql can run any time after step 4
 -- ======================================================================
 -- Stored functions (PL/pgSQL). Run after seed.sql. Safe to re-run:
 -- CREATE OR REPLACE replaces an existing function with the same name.

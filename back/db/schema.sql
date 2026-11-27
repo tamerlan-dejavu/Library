@@ -1,7 +1,8 @@
+-- Run order: 1 of 5 (schema -> seed -> procedures -> security -> post_seed_covers); queries.sql, structure.sql and call_functions.sql can run any time after step 4
 -- ======================================================================
 -- Book Catalog schema (PostgreSQL)
 -- Run order: python manage.py migrate -> schema.sql -> seed.sql
---            -> procedures.sql -> post_seed_covers.sql -> security.sql
+--            -> procedures.sql -> security.sql -> post_seed_covers.sql
 --
 -- How the ER model maps to these tables
 -- ----------------------------------------------------------------------

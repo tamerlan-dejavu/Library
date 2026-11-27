@@ -1,7 +1,8 @@
+-- Run order: 4 of 5 (schema -> seed -> procedures -> security -> post_seed_covers); queries.sql, structure.sql and call_functions.sql can run any time after step 4
 -- ======================================================================
 -- Security: an application role with only the rights the website needs.
--- Run as the admin user (postgres) AFTER migrate, schema, seed, procedures,
--- post_seed_covers (this file is always the last one):
+-- Run as the admin user (postgres) AFTER migrate, schema, seed and
+-- procedures; post_seed_covers.sql comes after this file:
 --     python db/run_sql.py db/security.sql
 -- The password below is a placeholder (app_password with a colon in
 -- front). run_sql.py replaces it with the environment variable
