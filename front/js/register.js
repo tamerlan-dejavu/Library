@@ -1,16 +1,6 @@
-// Registration form: client-side checks first, then POST /api/register/
+// Registration form: checks in the browser first, then POST /api/register/
 
 const fieldIds = ["firstName", "lastName", "email", "birthYear", "password", "password2"];
-
-// Server field name -> id of the input on this page
-const serverFields = {
-  first_name: "firstName",
-  last_name: "lastName",
-  email: "email",
-  birth_year: "birthYear",
-  password: "password",
-  password2: "password2"
-};
 
 // Marks a field as invalid and writes the message under it
 function showError(id, message) {
@@ -24,22 +14,24 @@ function clearErrors() {
     document.getElementById(fieldIds[i]).classList.remove("is-invalid");
     document.getElementById(fieldIds[i] + "Error").textContent = "";
   }
-  hideBoxMessage("formError");
+  document.getElementById("formError").classList.add("d-none");
 }
 
-// Name rule (same as the server): at least 2 characters, letters of any
-// alphabet, and also space, hyphen and apostrophe. \p{L} = any letter.
-function isValidName(name) {
-  return name.length >= 2 && /^[\p{L} '’-]+$/u.test(name) && /\p{L}/u.test(name);
+// A name: at least 2 characters and no digits (the server checks the rest)
+function isGoodName(name) {
+  if (name.length < 2) {
+    return false;
+  }
+  for (let i = 0; i < name.length; i++) {
+    if (name[i] >= "0" && name[i] <= "9") {
+      return false;
+    }
+  }
+  return true;
 }
 
-// Simple e-mail check: something@something.something, no spaces
-function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-// Checks the form and, if everything is fine, creates the account
-async function registerUser() {
+// Checks the form; if everything is fine, creates the account
+function registerUser() {
   const firstName = document.getElementById("firstName").value.trim();
   const lastName = document.getElementById("lastName").value.trim();
   const email = document.getElementById("email").value.trim().toLowerCase();
@@ -50,24 +42,23 @@ async function registerUser() {
   clearErrors();
   let isValid = true;
 
-  if (!isValidName(firstName)) {
+  if (!isGoodName(firstName)) {
     showError("firstName", "At least 2 letters (spaces, - and ' are allowed).");
     isValid = false;
   }
 
-  if (!isValidName(lastName)) {
+  if (!isGoodName(lastName)) {
     showError("lastName", "At least 2 letters (spaces, - and ' are allowed).");
     isValid = false;
   }
 
-  if (!isValidEmail(email)) {
+  // something@something.something, without spaces
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     showError("email", "Please enter a valid email address.");
     isValid = false;
   }
 
-  const currentYear = new Date().getFullYear();
-  const age = currentYear - birthYear;
-
+  const age = new Date().getFullYear() - birthYear;
   if (isNaN(birthYear)) {
     showError("birthYear", "Please enter your birth year.");
     isValid = false;
@@ -89,35 +80,40 @@ async function registerUser() {
     isValid = false;
   }
 
-  if (!isValid) {
-    return;
+  if (isValid) {
+    sendRegistration(firstName, lastName, email, birthYear, password, password2);
   }
+}
 
-  // The server checks the same rules again (and that the email is free)
+// Sends the form to the server; it checks the same rules again
+async function sendRegistration(firstName, lastName, email, birthYear, password, password2) {
   try {
-    await apiPost("/api/register/", {
-      first_name: firstName,
-      last_name: lastName,
-      email: email,
-      birth_year: birthYear,
-      password: password,
-      password2: password2
+    await apiRequest("/api/register/", "POST", {
+      first_name: firstName, last_name: lastName, email: email,
+      birth_year: birthYear, password: password, password2: password2
     });
   } catch (err) {
-    // Show the message under the field it belongs to, if we know it
-    if (err.field && serverFields[err.field]) {
-      showError(serverFields[err.field], err.message);
+    // Show the message under the field it belongs to
+    if (err.field === "first_name") {
+      showError("firstName", err.message);
+    } else if (err.field === "last_name") {
+      showError("lastName", err.message);
+    } else if (err.field === "email") {
+      showError("email", err.message);
+    } else if (err.field === "birth_year") {
+      showError("birthYear", err.message);
+    } else if (err.field === "password" || err.field === "password2") {
+      showError(err.field, err.message);
     } else {
-      showBoxMessage("formError", err.message);
+      document.getElementById("formError").textContent = err.message;
+      document.getElementById("formError").classList.remove("d-none");
     }
     return;
   }
-
-  // The server already logged the new user in
+  // The server has already logged the new user in
   location.href = "profile.html";
 }
 
-// Connect the form (no inline onsubmit in the HTML)
 document.getElementById("registerForm").addEventListener("submit", function (event) {
   event.preventDefault();   // stay on the page; we send the data with fetch
   registerUser();
