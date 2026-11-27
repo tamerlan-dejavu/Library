@@ -1,115 +1,132 @@
-// Display settings: theme, body font and text size.
+// Display settings: theme, text font and text size, saved in localStorage.
 // Loaded in <head> on every page, so the saved choice applies before drawing.
-// Saved in localStorage: "theme" (paper | night | contrast),
-// "font" (sans | serif) and "size" (14 | 16 | 18 | 20).
-// The dark theme uses Bootstrap's own colour mode: <html data-bs-theme="dark">.
+// Themes: "paper" (light), "night" (dark, Bootstrap data-bs-theme="dark"),
+// "contrast" (black on white).
 
-const THEMES = ["paper", "night", "contrast"];
 const SIZES = [14, 16, 18, 20];
-const FONTS = {
-  sans: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-  serif: 'Georgia, "Times New Roman", serif'
-};
 
-// Reads a saved value; storage can be blocked (private mode)
-function readSetting(key, fallback) {
+// Reads a saved value; localStorage can be blocked (private mode)
+function readSetting(name, defaultValue) {
   try {
-    return localStorage.getItem(key) || fallback;
+    const value = localStorage.getItem(name);
+    if (value === null) {
+      return defaultValue;
+    }
+    return value;
   } catch (err) {
-    return fallback;
+    return defaultValue;
   }
 }
 
 // Saves a value, or removes it when value is null
-function writeSetting(key, value) {
+function saveSetting(name, value) {
   try {
     if (value === null) {
-      localStorage.removeItem(key);
+      localStorage.removeItem(name);
     } else {
-      localStorage.setItem(key, value);
+      localStorage.setItem(name, value);
     }
   } catch (err) {
-    // ignore: the setting still applies on this page
+    // ignore: the setting still works on this page
   }
 }
 
-// The current settings, with defaults
-function currentTheme() {
-  const theme = readSetting("theme", "paper");
-  return THEMES.includes(theme) ? theme : "paper";
-}
-
-function currentFont() {
-  return readSetting("font", "sans") === "serif" ? "serif" : "sans";
-}
-
-function currentSize() {
-  const size = parseInt(readSetting("size", "16"));
-  return SIZES.includes(size) ? size : 16;
-}
-
-// Marks the pressed button of a group (aria-pressed="true")
-function markPressed(selector, dataKey, value) {
-  const buttons = document.querySelectorAll(selector);
-  for (let i = 0; i < buttons.length; i++) {
-    buttons[i].setAttribute("aria-pressed", buttons[i].dataset[dataKey] === value ? "true" : "false");
-  }
-}
-
-// Puts all settings on <html> and updates the buttons on the page
-function applyDisplay() {
+// Puts the saved settings on <html> and updates buttons and logos
+function applySettings() {
+  let theme = readSetting("theme", "paper");
+  const font = readSetting("font", "sans");
+  let size = readSetting("size", "16");
   const root = document.documentElement;
-  const theme = currentTheme();
-  root.dataset.theme = theme;
-  root.dataset.bsTheme = theme === "night" ? "dark" : "light";
-  root.style.setProperty("--bs-body-font-family", FONTS[currentFont()]);
-  // Bootstrap sizes everything in rem, so the whole page scales with this
-  root.style.fontSize = currentSize() + "px";
+  // unknown saved values fall back to the defaults
+  if (theme !== "night" && theme !== "contrast") {
+    theme = "paper";
+  }
+  if (SIZES.indexOf(parseInt(size)) === -1) {
+    size = "16";
+  }
 
-  // Logos: <img data-logo="on-dark"> sits on a dark bar (header, footer,
-  // burgundy panel) and always uses the light mark; <img data-logo="auto">
-  // sits on the page background, so it follows the theme
+  root.dataset.theme = theme;
+  if (theme === "night") {
+    root.dataset.bsTheme = "dark";
+  } else {
+    root.dataset.bsTheme = "light";
+  }
+  if (font === "serif") {
+    root.style.setProperty("--bs-body-font-family", 'Georgia, "Times New Roman", serif');
+  } else {
+    root.style.removeProperty("--bs-body-font-family");
+  }
+  root.style.fontSize = size + "px";   // Bootstrap uses rem, so all text scales
+
+  updateLogos(theme);
+  updateButtons(theme, font, size);
+}
+
+// Logos: <img data-logo="on-dark"> sits on a dark bar and always uses the
+// light mark; <img data-logo="auto"> follows the theme
+function updateLogos(theme) {
   const logos = document.querySelectorAll("img[data-logo]");
   for (let i = 0; i < logos.length; i++) {
-    const onDark = logos[i].dataset.logo === "on-dark" || theme === "night";
-    logos[i].src = onDark ? "assets/logo-paper.png" : "assets/logo-ink.png";
+    if (logos[i].dataset.logo === "on-dark" || theme === "night") {
+      logos[i].src = "assets/logo-paper.png";
+    } else {
+      logos[i].src = "assets/logo-ink.png";
+    }
   }
+}
 
-  markPressed("[data-theme-button]", "themeButton", theme);
-  markPressed("[data-font-button]", "fontButton", currentFont());
+// Marks the pressed theme and font buttons, shows the text size
+function updateButtons(theme, font, size) {
+  const themeButtons = document.querySelectorAll("[data-theme-button]");
+  for (let i = 0; i < themeButtons.length; i++) {
+    themeButtons[i].setAttribute("aria-pressed", String(themeButtons[i].dataset.themeButton === theme));
+  }
+  const fontButtons = document.querySelectorAll("[data-font-button]");
+  for (let i = 0; i < fontButtons.length; i++) {
+    fontButtons[i].setAttribute("aria-pressed", String(fontButtons[i].dataset.fontButton === font));
+  }
   const sizeLabels = document.querySelectorAll("[data-size-label]");
   for (let i = 0; i < sizeLabels.length; i++) {
-    sizeLabels[i].textContent = currentSize() + " px";
+    sizeLabels[i].textContent = size + " px";
   }
 }
 
 function setTheme(name) {
-  writeSetting("theme", name);
-  applyDisplay();
+  saveSetting("theme", name);
+  applySettings();
 }
 
 function setFont(name) {
-  writeSetting("font", name);
-  applyDisplay();
+  saveSetting("font", name);
+  applySettings();
 }
 
 // step: -1 (A-), +1 (A+) or 0 (A = back to 16 px)
 function changeSize(step) {
-  let index = step === 0 ? 1 : SIZES.indexOf(currentSize()) + step;
-  index = Math.max(0, Math.min(SIZES.length - 1, index));
-  writeSetting("size", String(SIZES[index]));
-  applyDisplay();
+  let index = SIZES.indexOf(parseInt(readSetting("size", "16")));
+  if (index === -1 || step === 0) {
+    index = 1;               // 16 px
+  } else {
+    index = index + step;
+  }
+  if (index < 0) {
+    index = 0;
+  }
+  if (index > SIZES.length - 1) {
+    index = SIZES.length - 1;
+  }
+  saveSetting("size", String(SIZES[index]));
+  applySettings();
 }
 
 // "Reset to default": light theme, sans font, 16 px
-function resetDisplay() {
-  writeSetting("theme", null);
-  writeSetting("font", null);
-  writeSetting("size", null);
-  applyDisplay();
+function resetSettings() {
+  saveSetting("theme", null);
+  saveSetting("font", null);
+  saveSetting("size", null);
+  applySettings();
 }
 
-applyDisplay();
-
-// Buttons exist only after the page is parsed
-document.addEventListener("DOMContentLoaded", applyDisplay);
+applySettings();
+// Buttons and logos exist only after the page is parsed
+document.addEventListener("DOMContentLoaded", applySettings);
