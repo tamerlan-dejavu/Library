@@ -132,7 +132,8 @@ def book_to_dict(book):
     return {
         "id": book.book_id, "title": book.title, "authors": authors, "genre": genre,
         "year": book.publication_year, "cover_url": book.cover_url, "rating": rating,
-        "is_bestseller": book.is_bestseller, "available_copies": book.available_copies,
+        "is_bestseller": book.is_bestseller, "is_recommended": book.is_recommended,
+        "available_copies": book.available_copies,
         "total_copies": book.total_copies,
     }
 
@@ -146,7 +147,7 @@ def first_author(book):
 
 
 def filter_books(books, params):
-    # Applies genre, year, rating, search and bestseller filters.
+    # Applies genre, year, rating, search and "recommended" filters.
     # Returns the books, or None when a number in the URL is wrong.
     genre_filter = Q()
     for value in params.getlist("genre"):   # ?genre=1&genre=3 (id or name)
@@ -168,6 +169,8 @@ def filter_books(books, params):
     if q:   # the title OR the name of any author
         by_author = BookAuthor.objects.filter(author__full_name__icontains=q)
         books = books.filter(Q(title__icontains=q) | Q(book_id__in=by_author.values("book_id")))
+    if params.get("recommended") == "1":   # "Recommended by Tamer" list
+        books = books.filter(is_recommended=True)
     return books
 
 
@@ -192,7 +195,9 @@ def book_list(request):
     result = []
     for book in page:
         result.append(book_to_dict(book))
-    return JsonResponse({"books": result, "page": page.number, "pages": paginator.num_pages})
+    # count = number of found books on all pages ("12 books" in the banner)
+    return JsonResponse({"books": result, "page": page.number, "pages": paginator.num_pages,
+                         "count": paginator.count})
 
 
 def book_detail(request, book_id):

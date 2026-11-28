@@ -99,6 +99,29 @@ class ApiTests(CatalogTestData):
         self.assertEqual([b["id"] for b in books], [covered.book_id, self.book1.book_id])
         self.assertEqual(books[0]["cover_url"], "covers/x.jpg")
 
+    # --- "Recommended by Tamer" ---
+    def test_recommended_only(self):
+        Book.objects.filter(book_id=self.book2.book_id).update(is_recommended=True)
+        data = self.client.get(f"/api/books/?recommended=1&q={TAG}").json()
+        self.assertEqual([b["id"] for b in data["books"]], [self.book2.book_id])
+        self.assertEqual(data["count"], 1)
+        self.assertTrue(data["books"][0]["is_recommended"])
+
+    def test_without_recommended_all_books(self):
+        Book.objects.filter(book_id=self.book2.book_id).update(is_recommended=True)
+        books = self.client.get(f"/api/books/?q={TAG}").json()["books"]
+        self.assertEqual(len(books), 3)
+        for book in books:   # the field is in every book
+            self.assertEqual(book["is_recommended"], book["id"] == self.book2.book_id)
+
+    def test_recommended_with_other_filters(self):
+        Book.objects.filter(book_id=self.book2.book_id).update(is_recommended=True)
+        # book2 is in Beta: with Beta it is found, with Alpha nothing
+        beta = self.client.get(f"/api/books/?recommended=1&q={TAG}&genre={self.beta.category_id}").json()
+        alpha = self.client.get(f"/api/books/?recommended=1&q={TAG}&genre={self.alpha.category_id}").json()
+        self.assertEqual(beta["count"], 1)
+        self.assertEqual(alpha["books"], [])
+
     def test_books_bad_year(self):
         r = self.client.get("/api/books/?year_from=abc")
         self.assertEqual(r.status_code, 400)
@@ -506,6 +529,17 @@ class AdminTests(CatalogTestData):
                 "return_date": ""}
         data.update(changes)
         return data
+
+    def test_admin_recommended_tick_shows_on_site(self):
+        # Tick "is_recommended" in the admin -> the book is in the Tamer list
+        url = f"/admin/catalog/book/{self.book3.pk}/change/"
+        r = self.client.post(url, self.book_form(title=self.book3.title, is_recommended="on"))
+        self.assertEqual(r.status_code, 302)
+        books = self.client.get(f"/api/books/?recommended=1&q={TAG}").json()["books"]
+        self.assertEqual([b["id"] for b in books], [self.book3.book_id])
+        # Untick (a checkbox that is not sent = false) -> it is gone again
+        self.client.post(url, self.book_form(title=self.book3.title))
+        self.assertEqual(self.client.get(f"/api/books/?recommended=1&q={TAG}").json()["books"], [])
 
     def test_book_create_update_delete(self):
         r = self.client.post("/admin/catalog/book/add/", self.book_form())
