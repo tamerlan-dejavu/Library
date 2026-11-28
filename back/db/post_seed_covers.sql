@@ -1,6 +1,7 @@
 -- Run order: 5 of 5 (schema -> seed -> procedures -> security -> post_seed_covers); queries.sql, structure.sql and call_functions.sql can run any time after step 4
 -- ======================================================================
--- Five sample books with real covers on the Home page (Bestsellers).
+-- Five sample books with real covers on the Home page (Bestsellers)
+-- and the 12 books of the "Recommended by Tamer" shelf (step 5).
 -- Run after seed.sql, procedures.sql and security.sql (this file is the last one):
 --     python db/run_sql.py db/post_seed_covers.sql
 -- Safe to run again: nothing is inserted twice, the UPDATE gives the
@@ -72,4 +73,36 @@ WHERE lower(b.title) IN (lower(s.title), lower(coalesce(s.alt_title, s.title)));
 SELECT b.book_id, b.title, b.cover_url, b.is_bestseller
 FROM book b
 JOIN sample_books s ON lower(b.title) IN (lower(s.title), lower(coalesce(s.alt_title, s.title)))
+ORDER BY b.book_id;
+
+-- 5. "Recommended by Tamer" shelf on the catalog page: exactly 12 books =
+--    the five books above + the 7 other books with the best average rating
+--    (at least 2 reviews; the same rating -> the smaller book_id first).
+--    One UPDATE for the whole table: true for these 12, false for the rest,
+--    so running the script again gives the same 12 books.
+UPDATE book
+SET is_recommended = book_id IN (
+        SELECT b.book_id
+        FROM book b
+        JOIN sample_books s ON lower(b.title) IN (lower(s.title), lower(coalesce(s.alt_title, s.title)))
+    UNION
+        SELECT top.book_id
+        FROM (SELECT r.book_id
+              FROM review r
+              JOIN book b ON b.book_id = r.book_id
+              WHERE NOT EXISTS (SELECT 1 FROM sample_books s
+                                WHERE lower(b.title) IN (lower(s.title), lower(coalesce(s.alt_title, s.title))))
+              GROUP BY r.book_id
+              HAVING count(*) >= 2
+              ORDER BY avg(r.rating) DESC, r.book_id
+              LIMIT 7) top
+    );
+
+-- Result: the 12 recommended books
+SELECT b.book_id, b.title,
+       round(avg(r.rating), 2) AS avg_rating, count(r.review_id) AS reviews
+FROM book b
+LEFT JOIN review r ON r.book_id = b.book_id
+WHERE b.is_recommended
+GROUP BY b.book_id, b.title
 ORDER BY b.book_id;

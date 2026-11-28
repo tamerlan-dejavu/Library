@@ -594,6 +594,8 @@ def build():
 # ---------------------------------------------------------------------
 # Write seed.sql
 # ---------------------------------------------------------------------
+# book.is_recommended is not written here: the database default (false) is
+# used, and post_seed_covers.sql marks the 12 "Recommended by Tamer" books.
 COLUMNS = {
     "category": ["category_id", "name"],
     "librarian": ["librarian_id", "full_name", "email"],

@@ -37,11 +37,13 @@ class AuthorAdmin(admin.ModelAdmin):
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
     list_display = ("book_id", "title", "authors", "publication_year", "category",
-                    "publisher", "is_bestseller", "available_copies", "total_copies")
+                    "publisher", "is_bestseller", "is_recommended", "available_copies", "total_copies")
+    # the "Recommended by Tamer" tick can be changed right in the list
+    list_editable = ("is_recommended",)
     # "category__name" searches inside the related table
     search_fields = ("title", "isbn", "category__name", "publisher__name",
                      "bookauthor__author__full_name")
-    list_filter = ("category", "is_bestseller", "publisher")
+    list_filter = ("category", "is_bestseller", "is_recommended", "publisher")
     list_per_page = 25
 
     def get_queryset(self, request):

@@ -76,6 +76,8 @@ CREATE TABLE book (
     description      TEXT,
     cover_url        TEXT,
     is_bestseller    BOOLEAN NOT NULL DEFAULT false,
+    -- "Recommended by Tamer" shelf on the catalog page
+    is_recommended   BOOLEAN NOT NULL DEFAULT false,
     total_copies     INT NOT NULL CHECK (total_copies >= 0),
     -- a book can never have more available copies than it owns
     available_copies INT NOT NULL CHECK (available_copies >= 0

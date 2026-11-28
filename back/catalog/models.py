@@ -63,6 +63,7 @@ class Book(models.Model):
     description = models.TextField(blank=True, null=True)
     cover_url = models.TextField(blank=True, null=True)
     is_bestseller = models.BooleanField(default=False)
+    is_recommended = models.BooleanField(default=False)   # "Recommended by Tamer"
     total_copies = models.IntegerField()
     available_copies = models.IntegerField()
 
