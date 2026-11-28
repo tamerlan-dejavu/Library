@@ -1,5 +1,6 @@
 Results of structure.sql
 
+-- Run order: any time after step 4 (schema -> seed -> procedures -> security -> post_seed_covers); queries.sql, structure.sql and call_functions.sql can run any time after step 4
 -- Database structure report (read-only). Shows only the 11 project
 -- tables, not Django's own tables (auth_*, django_*).
 -- Run: python db/run_sql.py db/structure.sql --out ../docs/sql_results/structure.txt
@@ -22,6 +23,7 @@ book         | cover_url        | text                        | YES         | NU
 book         | is_bestseller    | boolean                     | NO          | false
 book         | total_copies     | integer                     | NO          | NULL
 book         | available_copies | integer                     | NO          | NULL
+book         | is_recommended   | boolean                     | NO          | false
 book_author  | book_author_id   | integer                     | NO          | NULL
 book_author  | book_id          | integer                     | NO          | NULL
 book_author  | author_id        | integer                     | NO          | NULL
@@ -63,7 +65,7 @@ review       | member_id        | integer                     | YES         | NU
 review       | rating           | integer                     | NO          | NULL
 review       | comment          | text                        | YES         | NULL
 review       | created_at       | timestamp without time zone | YES         | now()
-(56 rows)
+(57 rows)
 
 --     they are already visible in (a), so we hide them here.
 table_name   | constraint_type | constraint_name                   | columns            | references_table | check_clause

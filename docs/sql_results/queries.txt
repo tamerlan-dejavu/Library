@@ -1,5 +1,6 @@
 Results of queries.sql
 
+-- Run order: any time after step 4 (schema -> seed -> procedures -> security -> post_seed_covers); queries.sql, structure.sql and call_functions.sql can run any time after step 4
 -- Demonstration queries for the Book Catalog database (read-only)
 -- Run: python db/run_sql.py db/queries.sql --out ../docs/sql_results/queries.txt
 -- Sections: J = joins, A = aggregates, S = subqueries
@@ -93,12 +94,12 @@ member_id | first_name | last_name   | city
 --     average loan length in days (for open loans we count until today).
 genre       | loans | overdue_now | avg_days
 ------------+-------+-------------+---------
-Fiction     | 52    | 10          | 36.4
-Mystery     | 33    | 4           | 34.5
-Sci-Fi      | 31    | 2           | 17.7
-Non-Fiction | 22    | 1           | 22.9
-Biography   | 21    | 2           | 23.5
-Fantasy     | 21    | 4           | 34.3
+Fiction     | 52    | 11          | 37.3
+Mystery     | 33    | 4           | 35.2
+Sci-Fi      | 31    | 3           | 18.5
+Non-Fiction | 22    | 1           | 23.3
+Fantasy     | 21    | 5           | 34.9
+Biography   | 21    | 2           | 23.8
 (6 rows)
 
 -- A2. Most active members: at least 3 loans (HAVING filters groups,
@@ -200,18 +201,21 @@ member_id | first_name | last_name     | email
 98        | Мөлдір     | Ахметқызы     | moldir.akhmetqyzy20@example.com
 58        | Сәуле      | Әбдірахманова | saule.abdirakhmanova73@example.com
 111       | Айгерім    | Бекқызы       | aygerim.bekqyzy43@example.com
+6         | Михаил     | Волков        | mikhail.volkov57@example.com
 103       | Гүлнұр     | Жұмабекова    | gulnur.zhumabekova87@example.com
 96        | Әлішер     | Қасымов       | alisher.qasymov51@example.com
 113       | Үміт       | Қасымова      | umit.qasymova7@example.com
 73        | Дмитрий    | Лебедев       | dmitriy.lebedev28@example.com
 94        | Екатерина  | Лебедева      | ekaterina.lebedeva74@example.com
 123       | Ерғали     | Нұрғалиев     | ergali.nurgaliev4@example.com
+49        | Бауыржан   | Өтебаев       | bauyrzhan.otebaev59@example.com
 59        | Ольга      | Попова        | olga.popova60@example.com
 77        | Дана       | Сәрсенбаева   | dana.sarsenbaeva17@example.com
 121       | Наталья    | Смирнова      | natalya.smirnova94@example.com
 81        | Никита     | Соколов       | nikita.sokolov59@example.com
 89        | Татьяна    | Соколова      | tatyana.sokolova93@example.com
-(22 rows)
+62        | Үміт       | Тұрсынова     | umit.tursynova3@example.com
+(25 rows)
 
 -- S3. NOT EXISTS: books that were never borrowed.
 --     (NOT IN would also work here because loan.book_id has no NULLs.)
@@ -263,30 +267,34 @@ book_id | title
 
 -- S4. IN: authors who wrote at least one bestseller.
 --     The subquery returns a list of author ids.
-full_name          | country
--------------------+---------------
-Adam Smith         | United Kingdom
-Arthur C. Clarke   | United Kingdom
-Dashiell Hammett   | United States
-Dorothy L. Sayers  | United Kingdom
-Edgar Allan Poe    | United States
-George Orwell      | United Kingdom
-Gillian Flynn      | United States
-Herman Melville    | United States
-J.R.R. Tolkien     | United Kingdom
-James Clear        | United States
-Jane Austen        | United Kingdom
-L. Frank Baum      | United States
-Mahatma Gandhi     | India
-Maya Angelou       | United States
-Nelson Mandela     | South Africa
-Stephen J. Dubner  | United States
-Steven Levitt      | United States
-Stieg Larsson      | Sweden
-Ursula K. Le Guin  | United States
-Victor Hugo        | France
-Walter Isaacson    | United States
-Аркадий Стругацкий | Россия
-Борис Стругацкий   | Россия
-Иван Ефремов       | Россия
-(24 rows)
+full_name           | country
+--------------------+---------------
+Adam Smith          | United Kingdom
+Arthur C. Clarke    | United Kingdom
+Dan Brown           | United States
+Dashiell Hammett    | United States
+Dorothy L. Sayers   | United Kingdom
+Edgar Allan Poe     | United States
+F. Scott Fitzgerald | United States
+George Orwell       | United Kingdom
+Gillian Flynn       | United States
+Harper Lee          | United States
+Herman Melville     | United States
+J.K. Rowling        | United Kingdom
+J.R.R. Tolkien      | United Kingdom
+James Clear         | United States
+Jane Austen         | United Kingdom
+L. Frank Baum       | United States
+Mahatma Gandhi      | India
+Maya Angelou        | United States
+Nelson Mandela      | South Africa
+Stephen J. Dubner   | United States
+Steven Levitt       | United States
+Stieg Larsson       | Sweden
+Ursula K. Le Guin   | United States
+Victor Hugo         | France
+Walter Isaacson     | United States
+Аркадий Стругацкий  | Россия
+Борис Стругацкий    | Россия
+Иван Ефремов        | Россия
+(28 rows)

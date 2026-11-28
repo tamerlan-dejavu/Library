@@ -1,5 +1,6 @@
 Results of call_functions.sql
 
+-- Run order: any time after step 4 (schema -> seed -> procedures -> security -> post_seed_covers); queries.sql, structure.sql and call_functions.sql can run any time after step 4
 -- Calls each stored function from procedures.sql once.
 -- Run: python db/run_sql.py db/call_functions.sql --out ../docs/sql_results/functions.txt
 -- Books rated above the overall average, at least 2 reviews
@@ -32,29 +33,32 @@ book_id | title                                   | avg_rating | review_count
 -- Members with overdue loans today
 member_id | first_name | last_name     | email                              | overdue_loans | max_days_overdue
 ----------+------------+---------------+------------------------------------+---------------+-----------------
-98        | Мөлдір     | Ахметқызы     | moldir.akhmetqyzy20@example.com    | 1             | 285
-39        | Oliver     | Walker        | oliver.walker26@example.com        | 1             | 284
-81        | Никита     | Соколов       | nikita.sokolov59@example.com       | 1             | 259
-89        | Татьяна    | Соколова      | tatyana.sokolova93@example.com     | 1             | 250
-103       | Гүлнұр     | Жұмабекова    | gulnur.zhumabekova87@example.com   | 1             | 231
-58        | Сәуле      | Әбдірахманова | saule.abdirakhmanova73@example.com | 1             | 198
-59        | Ольга      | Попова        | olga.popova60@example.com          | 1             | 173
-113       | Үміт       | Қасымова      | umit.qasymova7@example.com         | 1             | 150
-12        | Michael    | Walker        | michael.walker67@example.com       | 1             | 134
-94        | Екатерина  | Лебедева      | ekaterina.lebedeva74@example.com   | 1             | 131
-96        | Әлішер     | Қасымов       | alisher.qasymov51@example.com      | 1             | 130
-68        | Arman      | Kim           | arman.kim47@example.com            | 1             | 120
-123       | Ерғали     | Нұрғалиев     | ergali.nurgaliev4@example.com      | 1             | 114
-77        | Дана       | Сәрсенбаева   | dana.sarsenbaeva17@example.com     | 1             | 106
-73        | Дмитрий    | Лебедев       | dmitriy.lebedev28@example.com      | 1             | 97
-3         | Alikhan    | Bekov         | alikhan.bekov56@example.com        | 2             | 79
-111       | Айгерім    | Бекқызы       | aygerim.bekqyzy43@example.com      | 1             | 73
-57        | James      | Wilson        | james.wilson22@example.com         | 1             | 41
-104       | Daniel     | Brown         | daniel.brown11@example.com         | 1             | 35
-115       | Olivia     | Smith         | olivia.smith68@example.com         | 1             | 27
-9         | Sarah      | Johnson       | sarah.johnson84@example.com        | 1             | 10
-121       | Наталья    | Смирнова      | natalya.smirnova94@example.com     | 1             | 9
-(22 rows)
+98        | Мөлдір     | Ахметқызы     | moldir.akhmetqyzy20@example.com    | 1             | 287
+39        | Oliver     | Walker        | oliver.walker26@example.com        | 1             | 286
+81        | Никита     | Соколов       | nikita.sokolov59@example.com       | 1             | 261
+89        | Татьяна    | Соколова      | tatyana.sokolova93@example.com     | 1             | 252
+103       | Гүлнұр     | Жұмабекова    | gulnur.zhumabekova87@example.com   | 1             | 233
+58        | Сәуле      | Әбдірахманова | saule.abdirakhmanova73@example.com | 1             | 200
+59        | Ольга      | Попова        | olga.popova60@example.com          | 1             | 175
+113       | Үміт       | Қасымова      | umit.qasymova7@example.com         | 1             | 152
+12        | Michael    | Walker        | michael.walker67@example.com       | 1             | 136
+94        | Екатерина  | Лебедева      | ekaterina.lebedeva74@example.com   | 1             | 133
+96        | Әлішер     | Қасымов       | alisher.qasymov51@example.com      | 1             | 132
+68        | Arman      | Kim           | arman.kim47@example.com            | 1             | 122
+123       | Ерғали     | Нұрғалиев     | ergali.nurgaliev4@example.com      | 1             | 116
+77        | Дана       | Сәрсенбаева   | dana.sarsenbaeva17@example.com     | 1             | 108
+73        | Дмитрий    | Лебедев       | dmitriy.lebedev28@example.com      | 1             | 99
+3         | Alikhan    | Bekov         | alikhan.bekov56@example.com        | 2             | 81
+111       | Айгерім    | Бекқызы       | aygerim.bekqyzy43@example.com      | 1             | 75
+57        | James      | Wilson        | james.wilson22@example.com         | 1             | 43
+104       | Daniel     | Brown         | daniel.brown11@example.com         | 1             | 37
+115       | Olivia     | Smith         | olivia.smith68@example.com         | 1             | 29
+9         | Sarah      | Johnson       | sarah.johnson84@example.com        | 1             | 12
+121       | Наталья    | Смирнова      | natalya.smirnova94@example.com     | 1             | 11
+6         | Михаил     | Волков        | mikhail.volkov57@example.com       | 1             | 1
+49        | Бауыржан   | Өтебаев       | bauyrzhan.otebaev59@example.com    | 1             | 1
+62        | Үміт       | Тұрсынова     | umit.tursynova3@example.com        | 1             | 1
+(25 rows)
 
 -- Fantasy books nobody has borrowed yet
 book_id | title                                | category_name
