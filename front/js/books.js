@@ -55,6 +55,11 @@ function makeBookCard(book, showBadge) {
   if (showBadge && book.is_bestseller) {
     card.querySelector(".book-card-badge").classList.remove("d-none");
   }
+  // "Tamer's pick" (only the catalog card template has this badge)
+  const pick = card.querySelector(".book-card-pick");
+  if (pick !== null && book.is_recommended) {
+    pick.classList.remove("d-none");
+  }
   card.querySelector(".title-link").href = link;
   card.querySelector(".title-link").textContent = book.title;
   card.querySelector(".book-card-author").textContent = book.authors.join(", ");

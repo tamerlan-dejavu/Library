@@ -354,50 +354,96 @@ button:focus-visible,
 
 
 /* ==========================================================
-   Catalog shelves. js/catalog.js puts data-shelf and the variables
-   --shelf-accent, --shelf-heading-font, --shelf-title-size on
-   .catalog-results. Without a shelf nothing here changes the page.
+   Catalog: "Recommended by Tamer" list. js/catalog.js puts
+   data-list="tamer" on .catalog-results and the class
+   book-grid-large on the grid. "All books" has neither, so
+   nothing in this section changes the normal catalog.
    ========================================================== */
 
-/* Banner: picture on the left, text on the right, accent stripe */
-.shelf-banner {
+/* Colour of the list: #7A5A12 (paper, contrast), a bit lighter at night.
+   White text on both: 6.4:1 and 5.3:1 (>= 4.5:1) */
+:root { --tamer-accent: #7a5a12; }
+[data-theme="night"] { --tamer-accent: #8a6614; }
+
+/* Variables of the list, set on the results container */
+.catalog-results {
+  --list-accent: var(--bs-danger);
+  --list-title-size: 2rem;
+}
+.catalog-results[data-list="tamer"] {
+  --list-accent: var(--tamer-accent);
+  --list-heading-font: "Source Sans 3", sans-serif;
+  --list-title-size: 2.6rem;
+}
+
+/* Flexbox: round photo on the left, text on the right, colour stripe */
+.tamer-banner {
   display: flex;
   align-items: center;
   gap: 1.5rem;
   padding: 1rem;
-  border-left: 6px solid var(--shelf-accent);
+  border-left: 6px solid var(--list-accent);
 }
-.shelf-image {
-  width: 220px;
-  height: 120px;
+.tamer-image {
+  flex-shrink: 0;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
   object-fit: cover;
-  filter: grayscale(0.5);
 }
-[data-theme="contrast"] .shelf-image { filter: none; }
-.shelf-title {
-  font-family: var(--shelf-heading-font);
-  font-size: var(--shelf-title-size);
-  font-weight: 600;
+/* Tile with "T" when assets/tamer.png is missing */
+.tamer-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--list-accent);
+  color: #fff;
+  font-size: 3rem;
+  font-weight: 700;
+}
+.tamer-letter.d-none { display: none; }
+.tamer-title {
+  font-family: var(--list-heading-font);
+  font-size: var(--list-title-size);
+  font-weight: 700;
 }
 
-/* Inside a shelf: card stripes, Borrow buttons and the active shelf button
-   take the shelf colour (white text >= 4.5:1 on every accent) */
-.catalog-results[data-shelf] .book-card { border-top-color: var(--shelf-accent); }
-.catalog-results[data-shelf] .book-card-action,
-.catalog-results[data-shelf] .shelf-button[aria-pressed="true"] {
-  --bs-btn-bg: var(--shelf-accent);
-  --bs-btn-border-color: var(--shelf-accent);
+/* Card titles in the Tamer list use the heading font of the list */
+.catalog-results[data-list="tamer"] .book-card-title { font-family: var(--list-heading-font); }
+
+/* Card stripes, Borrow buttons and the pressed list button take the colour */
+.catalog-results[data-list="tamer"] .book-card { border-top-color: var(--list-accent); }
+.catalog-results[data-list="tamer"] .book-card-action,
+.catalog-results[data-list="tamer"] .list-button[aria-pressed="true"] {
+  --bs-btn-bg: var(--list-accent);
+  --bs-btn-border-color: var(--list-accent);
   --bs-btn-color: #fff;
-  --bs-btn-hover-bg: var(--shelf-accent);
-  --bs-btn-hover-border-color: var(--shelf-accent);
+  --bs-btn-hover-bg: var(--list-accent);
+  --bs-btn-hover-border-color: var(--list-accent);
   --bs-btn-hover-color: #fff;
-  --bs-btn-active-bg: var(--shelf-accent);
-  background-color: var(--shelf-accent);
-  border-color: var(--shelf-accent);
+  --bs-btn-active-bg: var(--list-accent);
+  background-color: var(--list-accent);
+  border-color: var(--list-accent);
   color: #fff;
 }
 
-/* Phones: the picture goes above the text */
+/* "Tamer's pick" badge, on cards in both lists (top-left, Bestseller is top-right) */
+.book-card-pick {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-25%, -50%);
+  background-color: var(--tamer-accent);
+  color: #fff;
+}
+
+/* CSS Grid: bigger cards in the Tamer list, 3 columns instead of 4;
+   2 and 1 columns at the same widths as .book-grid */
+.book-grid-large { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 991px) {
+  .book-grid-large { grid-template-columns: repeat(2, 1fr); }
+}
 @media (max-width: 575px) {
-  .shelf-banner { flex-direction: column; align-items: flex-start; }
+  .book-grid-large { grid-template-columns: 1fr; }
+  .tamer-banner { flex-direction: column; align-items: flex-start; }
 }
